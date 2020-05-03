@@ -3,4 +3,7 @@
     <string name="navigation_view_header_title">Title</string>
     <string name="settings_title">Settings</string>
     <string name="controller_title">Blinkers Control</string>
+    <string name="communication_error">Error communicating with Blinkers</string>
+    <string name="on">ON</string>
+    <string name="off">OFF</string>
 </resources>
