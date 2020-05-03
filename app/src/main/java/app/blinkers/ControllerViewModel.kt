@@ -23,10 +23,7 @@ class ControllerViewModel(
             }
         }
         ledRepository.observeLeds().distinctUntilChanged().switchMap {
-            val leds = updateLedStatus(it)
-            Timber.log(0, "CAlling")
-            _ledOneStatusLabel.value = if (leds.value?.get(0)?.isOn == true) R.string.on else R.string.off
-            leds
+           updateLedStatus(it)
         }
 
     }

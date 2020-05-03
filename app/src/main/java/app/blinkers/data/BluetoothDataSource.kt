@@ -27,16 +27,18 @@ class BluetoothDataSource internal constructor(
         val mainHandler = Handler(Looper.getMainLooper())
         mainHandler.post(object : Runnable {
             override fun run() {
-                val id = Random(0).nextInt(0, 3)
+                val id = rdm.nextInt(0, 3)
                 setLed(id, deviceLeds[id]?.isOn == false)
-                mainHandler.postDelayed(this, 3000)
+                mainHandler.postDelayed(this, 2000)
             }
 
         })
     }
 
-    private val _leds = MutableLiveData(deviceLeds)
-    val leds: LiveData<List<Led>> = _leds.map { ArrayList(it.values) };
+    private val _leds = MutableLiveData<Map<Int, Led>>()
+    val leds: LiveData<List<Led>> = _leds.map {
+        ArrayList(it.values)
+    };
 
     override fun observeLeds(): LiveData<Result<List<Led>>> {
         return leds.map {
@@ -61,6 +63,7 @@ class BluetoothDataSource internal constructor(
         led?.let {
             val newLed = it.copy(isOn = isOn)
             deviceLeds.set(id, newLed)
+            _leds.value = deviceLeds
         }
     }
 
