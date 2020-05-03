@@ -1,14 +1,14 @@
 package app.blinkers
 
 import androidx.lifecycle.*
-import app.blinkers.data.BlinkersRepository
+import app.blinkers.data.LedRepository
 import app.blinkers.data.Led
 import app.blinkers.data.Result
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class ControllerViewModel(
-    private val blinkersRepository: BlinkersRepository,
+    private val ledRepository: LedRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -18,11 +18,11 @@ class ControllerViewModel(
         if (forceUpdate) {
             _dataLoading.value = true;
             viewModelScope.launch {
-                blinkersRepository.getLeds();
+                ledRepository.getLeds();
                 _dataLoading.value = false;
             }
         }
-        blinkersRepository.observeLeds().distinctUntilChanged().switchMap {
+        ledRepository.observeLeds().distinctUntilChanged().switchMap {
             val leds = updateLedStatus(it)
             Timber.log(0, "CAlling")
             _ledOneStatusLabel.value = if (leds.value?.get(0)?.isOn == true) R.string.on else R.string.off
@@ -51,6 +51,10 @@ class ControllerViewModel(
 
     fun loadLedStatus(forceUpdate: Boolean) {
         _forceUpdate.value = forceUpdate
+    }
+
+    fun switchLed(led: Led, isOn: Boolean) = viewModelScope.launch {
+        ledRepository.setLed(led, isOn)
     }
 
     private fun updateLedStatus(ledResult: Result<List<Led>>): LiveData<List<Led>> {

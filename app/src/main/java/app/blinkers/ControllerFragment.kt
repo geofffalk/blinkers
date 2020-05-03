@@ -10,10 +10,12 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.navArgs
-import app.blinkers.data.DefaultBlinkersRepo
+import app.blinkers.data.BluetoothDataSource
+import app.blinkers.data.DefaultLedRepo
 import app.blinkers.data.Led
 import app.blinkers.databinding.ControllerFragBinding
 import com.google.android.material.snackbar.Snackbar
+import timber.log.Timber
 
 class ControllerFragment : Fragment() {
 
@@ -21,6 +23,8 @@ class ControllerFragment : Fragment() {
 
     private val args: ControllerFragmentArgs by navArgs()
     private lateinit var items: List<Led>
+
+    private lateinit var listAdapter: LedListAdapter
 
     private lateinit var viewDataBinding: ControllerFragBinding
 
@@ -33,14 +37,6 @@ class ControllerFragment : Fragment() {
             viewmodel = viewModel
         }
 
-        val ledObserver = Observer<List<Led>> { ledList ->
-            // Update the UI, in this case, a TextView.
-            items = ledList
-        }
-
-        // Observe the LiveData, passing in this activity as the LifecycleOwner and the observer.
-        viewModel.items.observe(viewLifecycleOwner, ledObserver)
-
         return viewDataBinding.root
     }
 
@@ -48,6 +44,7 @@ class ControllerFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         viewDataBinding.lifecycleOwner = this.viewLifecycleOwner
         setupSnackbar()
+        setupListAdapter()
     }
 
     private fun setupSnackbar() {
@@ -57,10 +54,20 @@ class ControllerFragment : Fragment() {
 //        }
     }
 
+    private fun setupListAdapter() {
+        val viewModel = viewDataBinding.viewmodel
+        if (viewModel != null) {
+            listAdapter = LedListAdapter(viewModel)
+            viewDataBinding.ledList.adapter = listAdapter
+        } else {
+            Timber.w("ViewModel not initialized when attempting to set up adapter.")
+        }
+    }
+
 }
 
 fun Fragment.getViewModelFactory(): ViewModelFactory {
-    val repository = DefaultBlinkersRepo()
+    val repository = DefaultLedRepo(BluetoothDataSource())
     return ViewModelFactory(repository, this)
 }
 
