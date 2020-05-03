@@ -8,5 +8,5 @@ interface LedRepository {
 
     suspend fun getLeds(): Result<List<Led>>
 
-    suspend fun setLed(led: Led, isOn: Boolean)
+    suspend fun setLed(ledId: Int, isOn: Boolean)
 }

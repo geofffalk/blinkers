@@ -7,7 +7,7 @@
 
         <variable
             name="led"
-            type="app.blinkers.data.Led" />
+            type="app.blinkers.LedViewState" />
 
         <variable
             name="viewmodel"
@@ -28,7 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:onClick="@{(view) -> viewmodel.switchLed(led, ((CompoundButton)view).isChecked())}"
+            android:onClick="@{(view) -> viewmodel.switchLed(led.id, ((CompoundButton)view).isChecked())}"
             android:checked="@{led.isOn}" />
 
         <TextView
@@ -40,7 +40,7 @@
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:layout_marginStart="@dimen/activity_horizontal_margin"
             android:textAppearance="@style/TextAppearance.AppCompat.Title"
-            android:text="@{led.id}" />
+            android:text="@{Integer.toString(led.id)}" />
 
         <TextView
             android:id="@+id/title_text"
@@ -51,6 +51,6 @@
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:layout_marginStart="@dimen/activity_horizontal_margin"
             android:textAppearance="@style/TextAppearance.AppCompat.Title"
-            android:text="@{led.isOn}" />
+            android:text="@{led.state}" />
     </LinearLayout>
 </layout>

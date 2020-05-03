@@ -52,8 +52,8 @@ class BluetoothDataSource internal constructor(
         }
     }
 
-    override suspend fun updateLed(led: Led, isOn: Boolean) = withContext(ioDispatcher) {
-        setLed(led.id, isOn)
+    override suspend fun updateLed(id: Int, isOn: Boolean) = withContext(ioDispatcher) {
+        setLed(id, isOn)
     }
 
     private fun setLed(id: Int, isOn: Boolean) {

@@ -7,7 +7,7 @@ import app.blinkers.data.Led
 
 
 @BindingAdapter("app:items")
-fun setItems(listView: RecyclerView, items: List<Led>?) {
+fun setItems(listView: RecyclerView, items: List<LedViewState>?) {
     items?.let {
         (listView.adapter as LedListAdapter).submitList(items)
     }

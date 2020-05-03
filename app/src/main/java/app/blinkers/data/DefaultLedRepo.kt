@@ -22,7 +22,7 @@ class DefaultLedRepo(
         return btDataSource.getLeds()
     }
 
-    override suspend fun setLed(led: Led, isOn: Boolean) {
-        btDataSource.updateLed(led, isOn)
+    override suspend fun setLed(id: Int, isOn: Boolean) {
+        btDataSource.updateLed(id, isOn)
     }
 }

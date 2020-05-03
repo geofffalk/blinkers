@@ -6,10 +6,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import app.blinkers.data.Led
 import app.blinkers.databinding.LedItemBinding
 
-class LedListAdapter(private val viewModel: ControllerViewModel) : ListAdapter<Led, LedListAdapter.ViewHolder>(LedDiffCallback()) {
+class LedListAdapter(private val viewModel: ControllerViewModel) : ListAdapter<LedViewState, LedListAdapter.ViewHolder>(LedDiffCallback()) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder.from(parent)
     }
@@ -22,7 +21,7 @@ class LedListAdapter(private val viewModel: ControllerViewModel) : ListAdapter<L
     class ViewHolder private constructor(val binding: LedItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(viewModel: ControllerViewModel, item: Led) {
+        fun bind(viewModel: ControllerViewModel, item: LedViewState) {
 
             binding.viewmodel = viewModel
             binding.led = item
@@ -40,12 +39,12 @@ class LedListAdapter(private val viewModel: ControllerViewModel) : ListAdapter<L
     }
 }
 
-class LedDiffCallback : DiffUtil.ItemCallback<Led>() {
-    override fun areItemsTheSame(oldItem: Led, newItem: Led): Boolean {
+class LedDiffCallback : DiffUtil.ItemCallback<LedViewState>() {
+    override fun areItemsTheSame(oldItem: LedViewState, newItem: LedViewState): Boolean {
         return oldItem.id == newItem.id
     }
 
-    override fun areContentsTheSame(oldItem: Led, newItem: Led): Boolean {
+    override fun areContentsTheSame(oldItem: LedViewState, newItem: LedViewState): Boolean {
         return oldItem == newItem
     }
 }

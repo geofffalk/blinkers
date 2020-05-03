@@ -8,5 +8,5 @@ interface DataSource {
 
     suspend fun getLeds(): Result<List<Led>>
 
-    suspend fun updateLed(led: Led, isOn: Boolean)
+    suspend fun updateLed(id: Int, isOn: Boolean)
 }

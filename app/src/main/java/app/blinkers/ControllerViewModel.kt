@@ -31,7 +31,12 @@ class ControllerViewModel(
 
     }
 
-    val items: LiveData<List<Led>> = _items
+    val items: LiveData<List<LedViewState>> = _items.map {
+        it.map {
+            val state =  if (it.isOn) "ON" else "OFF"
+            LedViewState(it.id, state, it.isOn)
+        }
+    }
 
     private val _ledOneStatusLabel = MutableLiveData<Int>()
     val ledOneStatusLabel: LiveData<Int> = _ledOneStatusLabel
@@ -53,8 +58,8 @@ class ControllerViewModel(
         _forceUpdate.value = forceUpdate
     }
 
-    fun switchLed(led: Led, isOn: Boolean) = viewModelScope.launch {
-        ledRepository.setLed(led, isOn)
+    fun switchLed(id: Int, isOn: Boolean) = viewModelScope.launch {
+        ledRepository.setLed(id, isOn)
     }
 
     private fun updateLedStatus(ledResult: Result<List<Led>>): LiveData<List<Led>> {
