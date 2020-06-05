@@ -45,7 +45,8 @@ class DevicesFragment: ListFragment() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
         setListAdapter(null)
         val header: View =
             requireActivity().layoutInflater.inflate(R.layout.device_list_header, null, false)

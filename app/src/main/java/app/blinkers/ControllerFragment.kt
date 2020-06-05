@@ -84,9 +84,11 @@ class ControllerFragment : Fragment(), ServiceConnection, SerialListener {
 
     override fun onStart() {
         super.onStart()
-        if (service != null) service!!.attach(this) else requireActivity().startService(
+        if (service != null) service!!.attach(this)
+        else
+            requireActivity().startService(
             Intent(
-                activity,
+                requireActivity(),
                 SerialService::class.java
             )
         ) // prevents service destroy on unbind from recreated activity caused by orientation change
@@ -153,7 +155,7 @@ class ControllerFragment : Fragment(), ServiceConnection, SerialListener {
         }
     }
     override fun onServiceConnected(name: ComponentName?, binder: IBinder) {
-        service = (binder as SerialService.SerialBinder).getService()
+        service = (binder as SerialService.SerialBinder).service
         if (initialStart && isResumed) {
             initialStart = false
             requireActivity().runOnUiThread { connect() }
