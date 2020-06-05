@@ -6,4 +6,7 @@
     <string name="communication_error">Error communicating with Blinkers</string>
     <string name="on">ON</string>
     <string name="off">OFF</string>
+    <string name="bluetooth_unsupported">Sorry, this device does not support Bluetooth. Closing app</string>
+    <string name="devices_title">Devices</string>
+    <string name="devices">Devices</string>
 </resources>

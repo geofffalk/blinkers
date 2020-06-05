@@ -21,7 +21,7 @@
         android:icon="@drawable/ic_list"
         android:title="@string/controller_title" />
     <item
-        android:id="@id/settings_fragment_dest"
+        android:id="@id/devices_fragment_dest"
         android:icon="@drawable/ic_statistics"
-        android:title="@string/settings_title" />
+        android:title="@string/devices_title" />
 </menu>
