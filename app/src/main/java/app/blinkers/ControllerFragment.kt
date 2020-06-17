@@ -26,7 +26,7 @@ import com.google.android.material.snackbar.Snackbar
 import timber.log.Timber
 import java.util.*
 
-class ControllerFragment : Fragment(), ServiceConnection, SerialListener {
+class ControllerFragment : Fragment() {
 
     private val viewModel by viewModels<ControllerViewModel> { getViewModelFactory() }
 
@@ -47,7 +47,6 @@ class ControllerFragment : Fragment(), ServiceConnection, SerialListener {
     private lateinit var receiveText: TextView
 
     private var socket: SerialSocket? = null
-    private var service: SerialService? = null
     private var initialStart = true
     private var connected = Connected.False
 
@@ -65,6 +64,33 @@ class ControllerFragment : Fragment(), ServiceConnection, SerialListener {
             viewmodel = viewModel
         }
 
+        viewModel.serialConnectEvent.observe(viewLifecycleOwner, Observer {
+            if (it) {
+                connected = Connected.True
+                status("Connected")
+            }
+        })
+
+        viewModel.serialConnectErrorEvent.observe(viewLifecycleOwner, Observer {event ->
+            event.getContentIfNotHandled()?.let {
+                status("connection failed: $it")
+                disconnect()
+            }
+        })
+
+        viewModel.serialReadEvent.observe(viewLifecycleOwner, Observer {event ->
+            event.getContentIfNotHandled()?.let {
+                receive(it)
+            }
+        })
+
+        viewModel.serialIOErrorEvent.observe(viewLifecycleOwner, Observer {event ->
+            event.getContentIfNotHandled()?.let {
+                status("connection lost: $it")
+                disconnect()
+            }
+        })
+
         receiveText =
             viewDataBinding.root.findViewById(R.id.receive_text) // TextView performance decreases with number of spans
 
@@ -79,19 +105,21 @@ class ControllerFragment : Fragment(), ServiceConnection, SerialListener {
             )
         }
 
+
+
         return viewDataBinding.root
     }
 
     override fun onStart() {
         super.onStart()
-        if (service != null) service!!.attach(this)
-        else
-            requireActivity().startService(
-            Intent(
-                requireActivity(),
-                SerialService::class.java
-            )
-        ) // prevents service destroy on unbind from recreated activity caused by orientation change
+//        if (service != null) service!!.attach(this)
+//        else
+//            requireActivity().startService(
+//            Intent(
+//                requireActivity(),
+//                SerialService::class.java
+//            )
+//        ) // prevents service destroy on unbind from recreated activity caused by orientation change
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -133,47 +161,13 @@ class ControllerFragment : Fragment(), ServiceConnection, SerialListener {
         }
     }
 
-    override fun onStop() {
-        if (service != null && !requireActivity().isChangingConfigurations) service!!.detach()
-        super.onStop()
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        requireActivity().bindService(
-            Intent(activity, SerialService::class.java),
-            this,
-            Context.BIND_AUTO_CREATE
-        )
-
-    }
     override fun onResume() {
         super.onResume()
-        if (initialStart && service != null) {
+        if (initialStart) {
             initialStart = false
             requireActivity().runOnUiThread { connect() }
         }
     }
-    override fun onServiceConnected(name: ComponentName?, binder: IBinder) {
-        service = (binder as SerialService.SerialBinder).service
-        if (initialStart && isResumed) {
-            initialStart = false
-            requireActivity().runOnUiThread { connect() }
-        }
-    }
-
-    override fun onServiceDisconnected(name: ComponentName?) {
-        service = null
-    }
-
-    override fun onDetach() {
-        try {
-            requireActivity().unbindService(this)
-        } catch (ignored: java.lang.Exception) {
-        }
-        super.onDetach()
-    }
-
 
     override fun onDestroy() {
         if (connected != Connected.False) disconnect()
@@ -211,18 +205,21 @@ class ControllerFragment : Fragment(), ServiceConnection, SerialListener {
             status("connecting...")
             connected = Connected.Pending
             socket = SerialSocket()
-            service!!.connect(this, "Connected to $deviceName")
-            socket!!.connect(context, service, device)
+            viewModel.connect("Connected to $deviceName")
+         //   service!!.connect("Connected to $deviceName")
+             socket!!.connect(context, viewModel, device)
         } catch (e: Exception) {
-            onSerialConnectError(e)
+            status("connection failed: ${e.message}")
+            disconnect()
         }
     }
 
     private fun disconnect() {
         connected = Connected.False
-        service!!.disconnect()
-        socket!!.disconnect()
-        socket = null
+        socket?.let {
+            it.disconnect()
+            socket = null
+        }
     }
 
     private fun send(str: String) {
@@ -247,7 +244,8 @@ class ControllerFragment : Fragment(), ServiceConnection, SerialListener {
             val data = (str + newline).toByteArray()
             socket!!.write(data)
         } catch (e: Exception) {
-            onSerialIoError(e)
+            status("connection lost: ${e.message}")
+            disconnect()
         }
     }
 
@@ -270,30 +268,6 @@ class ControllerFragment : Fragment(), ServiceConnection, SerialListener {
         )
         receiveText.append(spn)
     }
-
-    /*
-     * SerialListener
-     */
-    override fun onSerialConnect() {
-        status("connected")
-        connected = Connected.True
-    }
-
-    override fun onSerialConnectError(e: Exception) {
-        status("connection failed: " + e.message)
-        disconnect()
-    }
-
-    override fun onSerialRead(data: ByteArray) {
-        receive(data)
-    }
-
-    override fun onSerialIoError(e: Exception) {
-        status("connection lost: " + e.message)
-        disconnect()
-    }
-
-
 }
 
 fun Fragment.getViewModelFactory(): ViewModelFactory {
