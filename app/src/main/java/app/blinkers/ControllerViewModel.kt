@@ -1,38 +1,27 @@
 package app.blinkers
 
-import android.os.Handler
-import android.os.IBinder
-import android.os.Looper
+import android.bluetooth.BluetoothDevice
 import android.util.Log
 import androidx.lifecycle.*
+import androidx.lifecycle.Observer
+import app.blinkers.data.IORepository
 import app.blinkers.data.LedRepository
 import app.blinkers.data.Led
 import app.blinkers.data.Result
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import timber.log.Timber
-import java.util.*
 
 class ControllerViewModel(
     private val ledRepository: LedRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel(), SerialListener {
 
-    private enum class QueueType {
-        Connect, ConnectError, Read, IoError
-    }
-
-    private inner class QueueItem internal constructor(
-        var type: QueueType?,
-        var data: ByteArray?,
-        var e: Exception?
-    )
-
     init {
         Log.d("SERV", "Started")
     }
 
-    private val queue1: Queue<QueueItem> = LinkedList()
-    private val queue2: Queue<QueueItem> = LinkedList()
+    private var deviceRepository: IORepository? = null
+
     private var connected = false
     private var notificationMsg: String? = null
 
@@ -65,6 +54,8 @@ class ControllerViewModel(
     private val _dataLoading = MutableLiveData<Boolean>()
     val dataLoading: LiveData<Boolean> = _dataLoading
 
+    var readData: LiveData<Result<ByteArray>> = MutableLiveData()
+
     private val _snackbarText = MutableLiveData<Event<Int>>()
     val snackbarText: LiveData<Event<Int>> = _snackbarText
 
@@ -87,29 +78,18 @@ class ControllerViewModel(
         loadLedStatus(true)
     }
 
-    fun connect(notificationMsg: String?) {
+    fun connect(notificationMsg: String?, device: BluetoothDevice) {
         connected = true;
         this.notificationMsg = notificationMsg;
 
-        for (item in queue1) {
-            when (item.type) {
-                QueueType.Connect -> _serialConnectEvent.value = true
-                QueueType.ConnectError -> _serialConnectErrorEvent.value = Event(item.e.toString())
-                QueueType.Read -> item.data?.let { _serialReadEvent.value = Event(it) }
-                QueueType.IoError ->  _serialIOErrorEvent.value = Event(item.e.toString())
-            }
-        }
-        for (item in queue2) {
-            when (item.type) {
-                QueueType.Connect -> _serialConnectEvent.value = true
-                QueueType.ConnectError -> _serialConnectErrorEvent.value = Event(item.e.toString())
-                QueueType.Read -> item.data?.let { _serialReadEvent.value = Event(it) }
-                QueueType.IoError ->  _serialIOErrorEvent.value = Event(item.e.toString())
-            }
-        }
-        queue1.clear()
-        queue2.clear()
     }
+
+    fun setRepo(deviceRepo: IORepository) {
+        deviceRepository = deviceRepo
+
+        readData = deviceRepo.observe()
+    }
+
 
     fun loadLedStatus(forceUpdate: Boolean) {
         _forceUpdate.value = forceUpdate
@@ -177,5 +157,10 @@ class ControllerViewModel(
         }
     }
 
+    fun writeData(data: ByteArray) {
+        viewModelScope.launch(Dispatchers.IO) {
+            deviceRepository?.write(data)
+        }
+    }
 
 }

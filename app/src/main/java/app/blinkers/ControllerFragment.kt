@@ -2,13 +2,14 @@ package app.blinkers
 
 import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothSocket
 import android.content.*
 import android.os.Bundle
-import android.os.IBinder
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.method.ScrollingMovementMethod
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import android.view.*
 import android.widget.TextView
 import android.widget.Toast
@@ -19,15 +20,22 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.navArgs
 import app.blinkers.data.BluetoothDataSource
+import app.blinkers.data.DefaultIORepo
 import app.blinkers.data.DefaultLedRepo
 import app.blinkers.data.Led
+import app.blinkers.data.Result
 import app.blinkers.databinding.ControllerFragBinding
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.*
+import kotlin.coroutines.CoroutineContext
 
-class ControllerFragment : Fragment() {
+class ControllerFragment : Fragment(), CoroutineScope {
 
+    private var socket: BluetoothSocket? = null;
     private val viewModel by viewModels<ControllerViewModel> { getViewModelFactory() }
 
     private val args: ControllerFragmentArgs by navArgs()
@@ -41,12 +49,18 @@ class ControllerFragment : Fragment() {
         False, Pending, True
     }
 
+    private val BLUETOOTH_SPP =
+        UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.IO
+
     private var deviceAddress: String? = null
     private var newline = "\r\n"
 
     private lateinit var receiveText: TextView
 
-    private var socket: SerialSocket? = null
+  //  private var socket: SerialSocket? = null
     private var initialStart = true
     private var connected = Connected.False
 
@@ -105,21 +119,7 @@ class ControllerFragment : Fragment() {
             )
         }
 
-
-
         return viewDataBinding.root
-    }
-
-    override fun onStart() {
-        super.onStart()
-//        if (service != null) service!!.attach(this)
-//        else
-//            requireActivity().startService(
-//            Intent(
-//                requireActivity(),
-//                SerialService::class.java
-//            )
-//        ) // prevents service destroy on unbind from recreated activity caused by orientation change
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -204,10 +204,26 @@ class ControllerFragment : Fragment() {
                 if (device.name != null) device.name else device.address
             status("connecting...")
             connected = Connected.Pending
-            socket = SerialSocket()
-            viewModel.connect("Connected to $deviceName")
+            launch {
+                try {
+                    socket = device.createRfcommSocketToServiceRecord(BLUETOOTH_SPP)
+                    socket?.apply {
+                        connect()
+                        viewModel.setRepo(DefaultIORepo(inputStream, outputStream))
+                        connected = Connected.True
+                    }
+                } catch (e: Exception) {
+                    Timber.d("EXCEPTION CONNECTING $e")
+                    socket?.close()
+                }
+            }
+
+            viewModel.readData.observe(viewLifecycleOwner, Observer {
+                if (it is Result.Success) receive(it.data)
+            })
+            viewModel.connect("Connected to $deviceName", device)
          //   service!!.connect("Connected to $deviceName")
-             socket!!.connect(context, viewModel, device)
+         //    socket!!.connect(context, viewModel, device)
         } catch (e: Exception) {
             status("connection failed: ${e.message}")
             disconnect()
@@ -217,7 +233,8 @@ class ControllerFragment : Fragment() {
     private fun disconnect() {
         connected = Connected.False
         socket?.let {
-            it.disconnect()
+            it.close()
+          //  it.disconnect()
             socket = null
         }
     }
@@ -242,7 +259,8 @@ class ControllerFragment : Fragment() {
             )
             receiveText .append(spn)
             val data = (str + newline).toByteArray()
-            socket!!.write(data)
+          //  socket!!.write(data)
+            viewModel.writeData(data)
         } catch (e: Exception) {
             status("connection lost: ${e.message}")
             disconnect()
@@ -268,6 +286,7 @@ class ControllerFragment : Fragment() {
         )
         receiveText.append(spn)
     }
+
 }
 
 fun Fragment.getViewModelFactory(): ViewModelFactory {

@@ -5,6 +5,7 @@ import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.savedstate.SavedStateRegistryOwner
+import app.blinkers.data.IORepository
 import app.blinkers.data.LedRepository
 
 @Suppress("UNCHECKED_CAST")
