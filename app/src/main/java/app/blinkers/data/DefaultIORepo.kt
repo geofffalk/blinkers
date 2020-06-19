@@ -18,7 +18,6 @@ class DefaultIORepo(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : IORepository {
 
-
     override fun observe() : LiveData<Result<ByteArray>> =  liveData(ioDispatcher) {
             try {
                 val buffer = ByteArray(1024)
@@ -39,6 +38,5 @@ class DefaultIORepo(
         } catch (e: Exception) {
       //
         }
-
     }
 }

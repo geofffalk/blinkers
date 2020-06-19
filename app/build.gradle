@@ -8,6 +8,7 @@ android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
 
+
     defaultConfig {
         applicationId "app.blinkers"
         minSdkVersion 23
@@ -51,6 +52,10 @@ android {
     }
 }
 
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -83,4 +88,6 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$archLifecycleVersion"
     implementation "androidx.navigation:navigation-fragment-ktx:$navigationVersion"
     implementation "androidx.navigation:navigation-ui-ktx:$navigationVersion"
+
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 }

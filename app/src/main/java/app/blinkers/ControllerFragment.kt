@@ -9,7 +9,6 @@ import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.method.ScrollingMovementMethod
 import android.text.style.ForegroundColorSpan
-import android.util.Log
 import android.view.*
 import android.widget.TextView
 import android.widget.Toast
@@ -271,7 +270,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
     }
 
     private fun receive(data: ByteArray) {
-        receiveText.append(String(data))
+        receiveText.append("${String(data).trim()}\n")
     }
 
     private fun status(str: String) {
