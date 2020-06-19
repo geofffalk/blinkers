@@ -19,13 +19,13 @@ class DefaultIORepo(
 ) : IORepository {
 
 
-    override fun observe() : LiveData<Result<ByteArray>> =  liveData {
+    override fun observe() : LiveData<Result<ByteArray>> =  liveData(ioDispatcher) {
             try {
                 val buffer = ByteArray(1024)
                 var len: Int
                 while (true) {
                     len = inputStream.read(buffer)
-                    val data = Arrays.copyOf(buffer, len)
+                    val data = buffer.copyOf(len)
                     emit(Result.Success(data))
                 }
             } catch (e: Exception) {

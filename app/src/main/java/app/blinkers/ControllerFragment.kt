@@ -211,6 +211,13 @@ class ControllerFragment : Fragment(), CoroutineScope {
                         connect()
                         viewModel.setRepo(DefaultIORepo(inputStream, outputStream))
                         connected = Connected.True
+
+                        activity?.runOnUiThread {
+                            viewModel.readData.observe(viewLifecycleOwner, Observer {
+                                if (it is Result.Success) receive(it.data)
+                            })
+                            viewModel.connect("Connected to $deviceName", device)
+                        }
                     }
                 } catch (e: Exception) {
                     Timber.d("EXCEPTION CONNECTING $e")
@@ -218,10 +225,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
                 }
             }
 
-            viewModel.readData.observe(viewLifecycleOwner, Observer {
-                if (it is Result.Success) receive(it.data)
-            })
-            viewModel.connect("Connected to $deviceName", device)
+
          //   service!!.connect("Connected to $deviceName")
          //    socket!!.connect(context, viewModel, device)
         } catch (e: Exception) {
@@ -259,7 +263,6 @@ class ControllerFragment : Fragment(), CoroutineScope {
             )
             receiveText .append(spn)
             val data = (str + newline).toByteArray()
-          //  socket!!.write(data)
             viewModel.writeData(data)
         } catch (e: Exception) {
             status("connection lost: ${e.message}")
