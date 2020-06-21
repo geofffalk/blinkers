@@ -3,13 +3,16 @@ package app.blinkers
 import android.bluetooth.BluetoothDevice
 import android.util.Log
 import androidx.lifecycle.*
-import androidx.lifecycle.Observer
 import app.blinkers.data.*
+import app.blinkers.data.BrainWaves
+import app.blinkers.data.source.BrainWavesRepository
+import app.blinkers.data.source.LedRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ControllerViewModel(
     private val ledRepository: LedRepository,
+    private val brainWavesRepository: BrainWavesRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel(), SerialListener {
 
@@ -17,33 +20,12 @@ class ControllerViewModel(
         Log.d("SERV", "Started")
     }
 
-    private var deviceRepository: IORepository? = null
+    private var deviceRepository: BrainWavesRepository? = null
 
     private var connected = false
     private var notificationMsg: String? = null
 
     private val _forceUpdate = MutableLiveData<Boolean>(false)
-
-    private val _items: LiveData<List<Led>> = _forceUpdate.switchMap { forceUpdate ->
-        if (forceUpdate) {
-            _dataLoading.value = true;
-            viewModelScope.launch {
-                ledRepository.getLeds();
-                _dataLoading.value = false;
-            }
-        }
-        ledRepository.observeLeds().distinctUntilChanged().switchMap {
-           updateLedStatus(it)
-        }
-
-    }
-
-    val items: LiveData<List<LedViewState>> = _items.map {
-        it.map {
-            val state =  if (it.isOn) "ON" else "OFF"
-            LedViewState(it.id, state, it.isOn)
-        }
-    }
 
     private val _ledOneStatusLabel = MutableLiveData<Int>()
     val ledOneStatusLabel: LiveData<Int> = _ledOneStatusLabel
@@ -51,7 +33,7 @@ class ControllerViewModel(
     private val _dataLoading = MutableLiveData<Boolean>()
     val dataLoading: LiveData<Boolean> = _dataLoading
 
-    var readData: LiveData<Result<BrainWaves>> = MutableLiveData()
+    var observeBrainWaves: LiveData<Result<BrainWaves>> = brainWavesRepository.observe()
 
     private val _snackbarText = MutableLiveData<Event<Int>>()
     val snackbarText: LiveData<Event<Int>> = _snackbarText
@@ -75,25 +57,12 @@ class ControllerViewModel(
         loadLedStatus(true)
     }
 
-    fun connect(notificationMsg: String?, device: BluetoothDevice) {
-        connected = true;
-        this.notificationMsg = notificationMsg;
-
-    }
-
-    fun setRepo(deviceRepo: IORepository) {
-        deviceRepository = deviceRepo
-
-        readData = deviceRepo.observe()
-    }
-
-
     fun loadLedStatus(forceUpdate: Boolean) {
         _forceUpdate.value = forceUpdate
     }
 
-    fun switchLed(id: Int, isOn: Boolean) = viewModelScope.launch {
-        ledRepository.setLed(id, isOn)
+    fun switchLed(isOn: Boolean) = viewModelScope.launch {
+        ledRepository.updateLed(Led.RED, isOn)
     }
 
     private fun updateLedStatus(ledResult: Result<List<Led>>): LiveData<List<Led>> {
@@ -153,11 +122,4 @@ class ControllerViewModel(
             }
         }
     }
-
-    fun writeData(data: ByteArray) {
-        viewModelScope.launch(Dispatchers.IO) {
-            deviceRepository?.write(data)
-        }
-    }
-
 }

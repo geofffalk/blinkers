@@ -5,12 +5,13 @@ import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.savedstate.SavedStateRegistryOwner
-import app.blinkers.data.IORepository
-import app.blinkers.data.LedRepository
+import app.blinkers.data.source.BrainWavesRepository
+import app.blinkers.data.source.LedRepository
 
 @Suppress("UNCHECKED_CAST")
 class ViewModelFactory constructor(
     private val ledRepository: LedRepository,
+    private val brainWavesRepository: BrainWavesRepository,
     owner: SavedStateRegistryOwner,
     defaultArgs: Bundle? = null
 ) : AbstractSavedStateViewModelFactory(owner, defaultArgs) {
@@ -22,7 +23,7 @@ class ViewModelFactory constructor(
     ) = with(modelClass) {
         when {
             isAssignableFrom(ControllerViewModel::class.java) ->
-                ControllerViewModel(ledRepository, handle)
+                ControllerViewModel(ledRepository, brainWavesRepository, handle)
             else ->
                 throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
