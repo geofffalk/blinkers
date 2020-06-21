@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 
 interface IORepository {
 
-    fun observe(): LiveData<Result<ByteArray>>
+    fun observe(): LiveData<Result<BrainWaves>>
     suspend fun write(data: ByteArray)
 
 }

@@ -4,10 +4,7 @@ import android.bluetooth.BluetoothDevice
 import android.util.Log
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
-import app.blinkers.data.IORepository
-import app.blinkers.data.LedRepository
-import app.blinkers.data.Led
-import app.blinkers.data.Result
+import app.blinkers.data.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -54,7 +51,7 @@ class ControllerViewModel(
     private val _dataLoading = MutableLiveData<Boolean>()
     val dataLoading: LiveData<Boolean> = _dataLoading
 
-    var readData: LiveData<Result<ByteArray>> = MutableLiveData()
+    var readData: LiveData<Result<BrainWaves>> = MutableLiveData()
 
     private val _snackbarText = MutableLiveData<Event<Int>>()
     val snackbarText: LiveData<Event<Int>> = _snackbarText
