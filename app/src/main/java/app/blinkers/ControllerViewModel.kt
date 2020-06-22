@@ -1,13 +1,11 @@
 package app.blinkers
 
-import android.bluetooth.BluetoothDevice
 import android.util.Log
 import androidx.lifecycle.*
 import app.blinkers.data.*
 import app.blinkers.data.BrainWaves
 import app.blinkers.data.source.BrainWavesRepository
 import app.blinkers.data.source.LedRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ControllerViewModel(
@@ -33,7 +31,8 @@ class ControllerViewModel(
     private val _dataLoading = MutableLiveData<Boolean>()
     val dataLoading: LiveData<Boolean> = _dataLoading
 
-    var observeBrainWaves: LiveData<Result<BrainWaves>> = brainWavesRepository.observe()
+    var observeBrainWaves: LiveData<Result<BrainWaves>> = brainWavesRepository.observeBrainWaves()
+    var observeLed: LiveData<Result<LedStatus>> = ledRepository.observeLed()
 
     private val _snackbarText = MutableLiveData<Event<Int>>()
     val snackbarText: LiveData<Event<Int>> = _snackbarText

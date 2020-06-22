@@ -3,8 +3,6 @@ package app.blinkers.data.source
 import android.bluetooth.BluetoothSocket
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.liveData
-import androidx.lifecycle.map
 import app.blinkers.data.BrainWaves
 import app.blinkers.data.Led
 import app.blinkers.data.LedStatus
@@ -17,7 +15,7 @@ import kotlin.coroutines.CoroutineContext
 
 class BluetoothDataSource(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-)  : BrainWavesDataSource, LedDataSource, CoroutineScope {
+)  : BrainWavesLiveDataSource, LedDataSource, CoroutineScope {
 
     private val job = Job()
     private var socket: BluetoothSocket? = null
@@ -26,8 +24,9 @@ class BluetoothDataSource(
     private val _currentBrainWaves = MutableLiveData<Result<BrainWaves>>()
     private val _ledStatus = MutableLiveData<Result<LedStatus>>()
 
-    fun setSocket(socket: BluetoothSocket) {
-        this.socket = socket;
+    fun connectToSocket(socket: BluetoothSocket) {
+        socket.connect()
+        this.socket = socket
 
         launch {
             val inputStream = socket.inputStream
@@ -119,6 +118,10 @@ class BluetoothDataSource(
                 )
             )
         )
+    }
+
+    fun disconnect() {
+        socket?.close()
     }
 
     override fun observeBrainWaves(): LiveData<Result<BrainWaves>> = _currentBrainWaves

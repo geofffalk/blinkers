@@ -5,9 +5,9 @@ import app.blinkers.data.BrainWaves
 import app.blinkers.data.Result
 
 class BrainWavesRepoImpl(
-    private val brainWavesDataSource: BrainWavesDataSource
+    private val brainWavesLiveDataSource: BrainWavesLiveDataSource
 ) : BrainWavesRepository {
 
-    override fun observe() : LiveData<Result<BrainWaves>> = brainWavesDataSource.observeBrainWaves()
+    override fun observeBrainWaves() : LiveData<Result<BrainWaves>> = brainWavesLiveDataSource.observeBrainWaves()
 
 }

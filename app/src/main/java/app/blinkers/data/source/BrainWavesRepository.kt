@@ -5,5 +5,5 @@ import app.blinkers.data.BrainWaves
 import app.blinkers.data.Result
 
 interface BrainWavesRepository {
-    fun observe(): LiveData<Result<BrainWaves>>
+    fun observeBrainWaves(): LiveData<Result<BrainWaves>>
 }

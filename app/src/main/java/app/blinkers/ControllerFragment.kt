@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothSocket
 import android.content.DialogInterface
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableStringBuilder
@@ -24,17 +23,7 @@ import app.blinkers.data.*
 import app.blinkers.data.source.*
 import app.blinkers.databinding.ControllerFragBinding
 import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.components.Legend
-import com.github.mikephil.charting.components.Legend.LegendForm
-import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.components.YAxis
-import com.github.mikephil.charting.components.YAxis.AxisDependency
-import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.LineData
-import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.utils.ColorTemplate
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.controller_frag.*
 import kotlinx.android.synthetic.main.controller_frag.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +36,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
 
     private lateinit var setBrainData: (List<Float>) -> Unit
     private var btSocket: BluetoothSocket? = null;
-    private val btDataSource: BrainWavesDataSource = BluetoothDataSource()
+    private val btDataSource: BrainWavesLiveDataSource = BluetoothDataSource()
     private val viewModel by viewModels<ControllerViewModel> { getViewModelFactory(btDataSource, btDataSource as LedDataSource) }
 
     private val args: ControllerFragmentArgs by navArgs()
@@ -74,7 +63,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
     private var brainRawData: String = ""
     private var currentlyReadingBrainData: Boolean = false
 
-  //  private var socket: SerialSocket? = null
+    //  private var socket: SerialSocket? = null
     private var initialStart = true
     private var connected = Connected.False
     private var startTime = System.currentTimeMillis();
@@ -108,7 +97,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
 
         viewModel.serialReadEvent.observe(viewLifecycleOwner, Observer {event ->
             event.getContentIfNotHandled()?.let {
-               // receive(it)
+                // receive(it)
             }
         })
 
@@ -119,14 +108,19 @@ class ControllerFragment : Fragment(), CoroutineScope {
             }
         })
 
+        viewModel.observeBrainWaves.observe(viewLifecycleOwner, Observer {
+            if (it is Result.Success) receive(it.data)
+        })
 
-        activity?.runOnUiThread {
-            viewModel.observeBrainWaves.observe(viewLifecycleOwner, Observer {
-                if (it is Result.Success) receive(it.data)
-            })
+        viewModel.observeLed.observe(viewLifecycleOwner, Observer {
+            if (it is Result.Success) {
+                view.ledStatus.text = if (it.data.isOn) "Led is ON" else "Led is OFF"
+            } else if (it is Result.Error) {
+                view.ledStatus.text = it.exception.message
+            }
+        })
 
-            startTime = System.currentTimeMillis()
-        }
+        startTime = System.currentTimeMillis()
 
         receiveText =
             view.findViewById(R.id.receive_text) // TextView performance decreases with number of spans
@@ -153,7 +147,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-      ///  viewDataBinding.lifecycleOwner = this.viewLifecycleOwner
+        ///  viewDataBinding.lifecycleOwner = this.viewLifecycleOwner
         setupSnackbar()
     }
 
@@ -226,8 +220,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
                 try {
                     btSocket = device.createRfcommSocketToServiceRecord(BLUETOOTH_SPP)
                     btSocket?.apply {
-                        connect()
-                        (btDataSource as BluetoothDataSource).setSocket(this)
+                        (btDataSource as BluetoothDataSource).connectToSocket(this)
                         connected = Connected.True
                     }
                 } catch (e: Exception) {
@@ -237,8 +230,8 @@ class ControllerFragment : Fragment(), CoroutineScope {
             }
 
 
-         //   service!!.connect("Connected to $deviceName")
-         //    socket!!.connect(context, viewModel, device)
+            //   service!!.connect("Connected to $deviceName")
+            //    socket!!.connect(context, viewModel, device)
         } catch (e: Exception) {
             status("connection failed: ${e.message}")
             disconnect()
@@ -249,7 +242,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
         connected = Connected.False
         btSocket?.let {
             it.close()
-          //  it.disconnect()
+            //  it.disconnect()
             btSocket = null
         }
     }
@@ -298,7 +291,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
 
         receiveText.append("${data}\n")
 
-        }
+    }
 
     private fun status(str: String) {
         val spn = SpannableStringBuilder(
@@ -318,9 +311,9 @@ class ControllerFragment : Fragment(), CoroutineScope {
 
 }
 
-fun Fragment.getViewModelFactory(brainWavesDataSource: BrainWavesDataSource, ledDataSource: LedDataSource): ViewModelFactory {
+fun Fragment.getViewModelFactory(brainWavesLiveDataSource: BrainWavesLiveDataSource, ledDataSource: LedDataSource): ViewModelFactory {
     val ledRepository = LedRepoImpl(ledDataSource)
-    val brainWavesRepo = BrainWavesRepoImpl(brainWavesDataSource)
+    val brainWavesRepo = BrainWavesRepoImpl(brainWavesLiveDataSource)
     return ViewModelFactory(ledRepository, brainWavesRepo, this)
 }
 
@@ -341,11 +334,11 @@ fun View.showSnackbar(snackbarText: String, timeLength: Int) {
     Snackbar.make(this, snackbarText, timeLength).run {
         addCallback(object : Snackbar.Callback() {
             override fun onShown(sb: Snackbar?) {
-             //   EspressoIdlingResource.increment()
+                //   EspressoIdlingResource.increment()
             }
 
             override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-             //   EspressoIdlingResource.decrement()
+                //   EspressoIdlingResource.decrement()
             }
         })
         show()
