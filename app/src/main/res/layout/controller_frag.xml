@@ -23,10 +23,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/terminal"
+            app:layout_constraintBottom_toTopOf="@+id/emotionButtons"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             android:orientation="horizontal"
+            android:gravity="center"
             android:layout_margin="10dp">
 
         <Switch
@@ -34,7 +35,6 @@
             android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:layout_marginBottom="10dp"
-            android:gravity="center"
             android:text="LED"  />
 
             <TextView
@@ -45,6 +45,61 @@
 
         </LinearLayout>
 
+        <RadioGroup
+            android:id="@+id/emotionButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_margin="10dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/terminal"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/ledLayout">
+
+            <RadioButton
+                android:id="@+id/r0"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="7dp"
+                android:text="-3"/>
+
+            <RadioButton
+                android:id="@+id/r1"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="7dp"
+                android:text="-2"/>
+
+            <RadioButton
+                android:id="@+id/r2"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="7dp"
+                android:text="-1"/>
+
+            <RadioButton
+                android:id="@+id/r3"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="7dp"
+                android:text="0"/>
+
+            <RadioButton
+                android:id="@+id/r4"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="7dp"
+                android:text="1"/>
+
+            <RadioButton
+                android:id="@+id/r5"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="7dp"
+                android:text="2"/>
+
+        </RadioGroup>
+
 
         <LinearLayout
             android:id="@+id/terminal"
@@ -53,7 +108,7 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ledLayout"
+            app:layout_constraintTop_toBottomOf="@id/emotionButtons"
             android:orientation="vertical">
 
             <TextView

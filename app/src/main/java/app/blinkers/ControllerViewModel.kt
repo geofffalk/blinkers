@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.*
 import app.blinkers.data.*
 import app.blinkers.data.BrainWaves
+import app.blinkers.data.source.BluetoothDataSource
+import app.blinkers.data.source.BluetoothStatusRepository
 import app.blinkers.data.source.BrainWavesRepository
 import app.blinkers.data.source.LedRepository
 import kotlinx.coroutines.launch
@@ -11,8 +13,9 @@ import kotlinx.coroutines.launch
 class ControllerViewModel(
     private val ledRepository: LedRepository,
     private val brainWavesRepository: BrainWavesRepository,
+    private val connectionStatusRepository: BluetoothStatusRepository,
     private val savedStateHandle: SavedStateHandle
-) : ViewModel(), SerialListener {
+) : ViewModel() {
 
     init {
         Log.d("SERV", "Started")
@@ -36,6 +39,8 @@ class ControllerViewModel(
 
     private val _snackbarText = MutableLiveData<Event<Int>>()
     val snackbarText: LiveData<Event<Int>> = _snackbarText
+
+    var observeConnectionStatus: LiveData<Result<String>> = connectionStatusRepository.observeConnectionStatus()
 
     private val _serialConnectEvent = MutableLiveData<Boolean>()
     val serialConnectEvent: LiveData<Boolean> = _serialConnectEvent
@@ -86,39 +91,39 @@ class ControllerViewModel(
         _snackbarText.value = Event(message)
     }
 
-
-    /**
-     * SerialListener
-     */
-    override fun onSerialConnect() {
-        if (connected) {
-            viewModelScope.launch {
-                _serialConnectEvent.value = true
-            }
-        }
-    }
-
-    override fun onSerialConnectError(e: Exception) {
-        if (connected) {
-            viewModelScope.launch {
-                _serialConnectErrorEvent.value = Event(e.toString())
-            }
-        }
-    }
-
-    override fun onSerialRead(data: ByteArray) {
-        if (connected) {
-            viewModelScope.launch {
-                _serialReadEvent.value = Event(data)
-            }
-        }
-    }
-
-    override fun onSerialIoError(e: Exception) {
-        if (connected) {
-            viewModelScope.launch {
-                _serialConnectErrorEvent.value = Event(e.toString())
-            }
-        }
-    }
+//
+//    /**
+//     * SerialListener
+//     */
+//    override fun onSerialConnect() {
+//        if (connected) {
+//            viewModelScope.launch {
+//                _serialConnectEvent.value = true
+//            }
+//        }
+//    }
+//
+//    override fun onSerialConnectError(e: Exception) {
+//        if (connected) {
+//            viewModelScope.launch {
+//                _serialConnectErrorEvent.value = Event(e.toString())
+//            }
+//        }
+//    }
+//
+//    override fun onSerialRead(data: ByteArray) {
+//        if (connected) {
+//            viewModelScope.launch {
+//                _serialReadEvent.value = Event(data)
+//            }
+//        }
+//    }
+//
+//    override fun onSerialIoError(e: Exception) {
+//        if (connected) {
+//            viewModelScope.launch {
+//                _serialConnectErrorEvent.value = Event(e.toString())
+//            }
+//        }
+//    }
 }

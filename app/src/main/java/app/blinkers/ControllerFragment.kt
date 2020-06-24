@@ -37,7 +37,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
     private lateinit var setBrainData: (List<Float>) -> Unit
     private var btSocket: BluetoothSocket? = null;
     private val btDataSource: BrainWavesLiveDataSource = BluetoothDataSource()
-    private val viewModel by viewModels<ControllerViewModel> { getViewModelFactory(btDataSource, btDataSource as LedDataSource) }
+    private val viewModel by viewModels<ControllerViewModel> { getViewModelFactory(btDataSource, btDataSource as LedDataSource, btDataSource as BluetoothDataSource) }
 
     private val args: ControllerFragmentArgs by navArgs()
     private lateinit var items: List<Led>
@@ -49,9 +49,6 @@ class ControllerFragment : Fragment(), CoroutineScope {
     private enum class Connected {
         False, Pending, True
     }
-
-    private val BLUETOOTH_SPP =
-        UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO
@@ -110,6 +107,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
 
         viewModel.observeBrainWaves.observe(viewLifecycleOwner, Observer {
             if (it is Result.Success) receive(it.data)
+            else if (it is Result.Error) receiveText.append("${it.exception}\n")
         })
 
         viewModel.observeLed.observe(viewLifecycleOwner, Observer {
@@ -120,6 +118,14 @@ class ControllerFragment : Fragment(), CoroutineScope {
             }
         })
 
+        viewModel.observeConnectionStatus.observe(viewLifecycleOwner, Observer {
+            if (it is Result.Success) {
+                status(it.data)
+            } else if (it is Result.Error) {
+                status(it.exception.toString())
+            }
+        })
+
         startTime = System.currentTimeMillis()
 
         receiveText =
@@ -127,7 +133,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
 
         receiveText.setTextColor(resources.getColor(R.color.colorRecieveText)) // set as default color to reduce number of spans
 
-        receiveText.setMovementMethod(ScrollingMovementMethod.getInstance())
+        receiveText.movementMethod = ScrollingMovementMethod.getInstance()
         val sendText = view.findViewById<TextView>(R.id.send_text)
         val sendBtn = view.findViewById<View>(R.id.send_btn)
         sendBtn.setOnClickListener { v: View? ->
@@ -187,13 +193,12 @@ class ControllerFragment : Fragment(), CoroutineScope {
         super.onResume()
         if (initialStart) {
             initialStart = false
-            requireActivity().runOnUiThread { connect() }
+             connect()
         }
     }
 
     override fun onDestroy() {
-        if (connected != Connected.False) disconnect()
-        requireActivity().stopService(Intent(activity, SerialService::class.java))
+      //  if (connected != Connected.False) disconnect()
         super.onDestroy()
     }
 
@@ -216,20 +221,9 @@ class ControllerFragment : Fragment(), CoroutineScope {
                 if (device.name != null) device.name else device.address
             status("connecting...")
             connected = Connected.Pending
-            launch {
-                try {
-                    btSocket = device.createRfcommSocketToServiceRecord(BLUETOOTH_SPP)
-                    btSocket?.apply {
-                        (btDataSource as BluetoothDataSource).connectToSocket(this)
-                        connected = Connected.True
-                    }
-                } catch (e: Exception) {
-                    Timber.d("EXCEPTION CONNECTING $e")
-                    btSocket?.close()
-                }
-            }
 
-
+            (btDataSource as BluetoothDataSource).connect(this@ControllerFragment.requireContext(), device)
+            connected = Connected.True
             //   service!!.connect("Connected to $deviceName")
             //    socket!!.connect(context, viewModel, device)
         } catch (e: Exception) {
@@ -311,10 +305,11 @@ class ControllerFragment : Fragment(), CoroutineScope {
 
 }
 
-fun Fragment.getViewModelFactory(brainWavesLiveDataSource: BrainWavesLiveDataSource, ledDataSource: LedDataSource): ViewModelFactory {
+fun Fragment.getViewModelFactory(brainWavesLiveDataSource: BrainWavesLiveDataSource, ledDataSource: LedDataSource, btDataSource: BluetoothDataSource): ViewModelFactory {
     val ledRepository = LedRepoImpl(ledDataSource)
     val brainWavesRepo = BrainWavesRepoImpl(brainWavesLiveDataSource)
-    return ViewModelFactory(ledRepository, brainWavesRepo, this)
+    val btStatusRepository = BluetoothStatusRepository(btDataSource)
+    return ViewModelFactory(ledRepository, brainWavesRepo, btStatusRepository, this)
 }
 
 fun View.setupSnackbar(
