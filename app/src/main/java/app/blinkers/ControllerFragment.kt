@@ -4,7 +4,6 @@ import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothSocket
 import android.content.DialogInterface
-import android.content.Intent
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableStringBuilder
@@ -21,23 +20,20 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.navArgs
 import app.blinkers.data.*
 import app.blinkers.data.source.*
+import app.blinkers.data.source.local.BlinkerDao
 import app.blinkers.databinding.ControllerFragBinding
 import com.github.mikephil.charting.charts.LineChart
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.controller_frag.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
 class ControllerFragment : Fragment(), CoroutineScope {
 
-    private lateinit var setBrainData: (List<Float>) -> Unit
     private var btSocket: BluetoothSocket? = null;
-    private val btDataSource: BrainWavesLiveDataSource = BluetoothDataSource()
-    private val viewModel by viewModels<ControllerViewModel> { getViewModelFactory(btDataSource, btDataSource as LedDataSource, btDataSource as BluetoothDataSource) }
+    private val viewModel by viewModels<ControllerViewModel> { getViewModelFactory() }
 
     private val args: ControllerFragmentArgs by navArgs()
     private lateinit var items: List<Led>
@@ -112,17 +108,9 @@ class ControllerFragment : Fragment(), CoroutineScope {
 
         viewModel.observeLed.observe(viewLifecycleOwner, Observer {
             if (it is Result.Success) {
-                view.ledStatus.text = if (it.data.isOn) "Led is ON" else "Led is OFF"
+                view.ledStatus.text = if (it.data == 1) "Led is ON" else "Led is OFF"
             } else if (it is Result.Error) {
                 view.ledStatus.text = it.exception.message
-            }
-        })
-
-        viewModel.observeConnectionStatus.observe(viewLifecycleOwner, Observer {
-            if (it is Result.Success) {
-                status(it.data)
-            } else if (it is Result.Error) {
-                status(it.exception.toString())
             }
         })
 
@@ -221,8 +209,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
                 if (device.name != null) device.name else device.address
             status("connecting...")
             connected = Connected.Pending
-
-            (btDataSource as BluetoothDataSource).connect(this@ControllerFragment.requireContext(), device)
+            BlinkersLiveDataSource.connect(this@ControllerFragment.requireContext(), device)
             connected = Connected.True
             //   service!!.connect("Connected to $deviceName")
             //    socket!!.connect(context, viewModel, device)
@@ -305,11 +292,9 @@ class ControllerFragment : Fragment(), CoroutineScope {
 
 }
 
-fun Fragment.getViewModelFactory(brainWavesLiveDataSource: BrainWavesLiveDataSource, ledDataSource: LedDataSource, btDataSource: BluetoothDataSource): ViewModelFactory {
-    val ledRepository = LedRepoImpl(ledDataSource)
-    val brainWavesRepo = BrainWavesRepoImpl(brainWavesLiveDataSource)
-    val btStatusRepository = BluetoothStatusRepository(btDataSource)
-    return ViewModelFactory(ledRepository, brainWavesRepo, btStatusRepository, this)
+fun Fragment.getViewModelFactory(): ViewModelFactory {
+    val repository = (requireContext().applicationContext as BlinkersApp).blinkersRepository
+    return ViewModelFactory(repository, this)
 }
 
 fun View.setupSnackbar(

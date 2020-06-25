@@ -4,24 +4,18 @@ import android.util.Log
 import androidx.lifecycle.*
 import app.blinkers.data.*
 import app.blinkers.data.BrainWaves
-import app.blinkers.data.source.BluetoothDataSource
-import app.blinkers.data.source.BluetoothStatusRepository
-import app.blinkers.data.source.BrainWavesRepository
-import app.blinkers.data.source.LedRepository
+import app.blinkers.data.source.BlinkersRepository
 import kotlinx.coroutines.launch
+import java.lang.Exception
 
 class ControllerViewModel(
-    private val ledRepository: LedRepository,
-    private val brainWavesRepository: BrainWavesRepository,
-    private val connectionStatusRepository: BluetoothStatusRepository,
+    private val blinkersRepository: BlinkersRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     init {
         Log.d("SERV", "Started")
     }
-
-    private var deviceRepository: BrainWavesRepository? = null
 
     private var connected = false
     private var notificationMsg: String? = null
@@ -34,13 +28,32 @@ class ControllerViewModel(
     private val _dataLoading = MutableLiveData<Boolean>()
     val dataLoading: LiveData<Boolean> = _dataLoading
 
-    var observeBrainWaves: LiveData<Result<BrainWaves>> = brainWavesRepository.observeBrainWaves()
-    var observeLed: LiveData<Result<LedStatus>> = ledRepository.observeLed()
+
+    var observeBrainWaves: LiveData<Result<BrainWaves>> = blinkersRepository.observeLatestBlinkersState().map {
+        return@map when (it) {
+            is Result.Success -> {
+                Result.Success(it.data.brainWaves)
+            }
+            is Result.Error -> {
+                Result.Error(it.exception)
+            }
+            else -> Result.Error(Exception("Unknown"))
+        }
+    }
+    var observeLed: LiveData<Result<Int>> = blinkersRepository.observeLatestBlinkersState().map {
+        return@map when (it) {
+            is Result.Success -> {
+                Result.Success(it.data.ledStatus)
+            }
+            is Result.Error -> {
+                Result.Error(it.exception)
+            }
+            else -> Result.Error(Exception("Unknown"))
+        }
+    }
 
     private val _snackbarText = MutableLiveData<Event<Int>>()
     val snackbarText: LiveData<Event<Int>> = _snackbarText
-
-    var observeConnectionStatus: LiveData<Result<String>> = connectionStatusRepository.observeConnectionStatus()
 
     private val _serialConnectEvent = MutableLiveData<Boolean>()
     val serialConnectEvent: LiveData<Boolean> = _serialConnectEvent
@@ -66,7 +79,7 @@ class ControllerViewModel(
     }
 
     fun switchLed(isOn: Boolean) = viewModelScope.launch {
-        ledRepository.updateLed(Led.RED, isOn)
+        blinkersRepository.setLedState(isOn)
     }
 
     private fun updateLedStatus(ledResult: Result<List<Led>>): LiveData<List<Led>> {
@@ -90,40 +103,4 @@ class ControllerViewModel(
     private fun showSnackbarMessage(message: Int) {
         _snackbarText.value = Event(message)
     }
-
-//
-//    /**
-//     * SerialListener
-//     */
-//    override fun onSerialConnect() {
-//        if (connected) {
-//            viewModelScope.launch {
-//                _serialConnectEvent.value = true
-//            }
-//        }
-//    }
-//
-//    override fun onSerialConnectError(e: Exception) {
-//        if (connected) {
-//            viewModelScope.launch {
-//                _serialConnectErrorEvent.value = Event(e.toString())
-//            }
-//        }
-//    }
-//
-//    override fun onSerialRead(data: ByteArray) {
-//        if (connected) {
-//            viewModelScope.launch {
-//                _serialReadEvent.value = Event(data)
-//            }
-//        }
-//    }
-//
-//    override fun onSerialIoError(e: Exception) {
-//        if (connected) {
-//            viewModelScope.launch {
-//                _serialConnectErrorEvent.value = Event(e.toString())
-//            }
-//        }
-//    }
 }

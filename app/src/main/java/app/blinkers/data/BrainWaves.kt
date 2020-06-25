@@ -1,3 +1,3 @@
 package app.blinkers.data
 
-data class BrainWaves(val signalStrength: Float, val delta: Float, val theta: Float, val lowAlpha: Float, val highAlpha: Float, val lowBeta: Float, val highBeta: Float, val lowGamma: Float, val highGamma: Float)
+data class BrainWaves(val signalStrength: Int, val delta: Int, val theta: Int, val lowAlpha: Int, val highAlpha: Int, val lowBeta: Int, val highBeta: Int, val lowGamma: Int, val highGamma: Int)
