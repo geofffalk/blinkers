@@ -16,8 +16,6 @@ object ServiceLocator {
     var blinkersRepository: BlinkersRepository? = null
         @VisibleForTesting set
 
-    @Volatile
-    var blinkersDataSource: BlinkersDataSource? = null
 
     fun provideBlinkersRepository(context: Context): BlinkersRepository {
         synchronized(this) {
@@ -27,7 +25,7 @@ object ServiceLocator {
 
     private fun createBlinkersRepository(context: Context): BlinkersRepository {
         val newRepo = DefaultBlinkersRepository(
-            BlinkersLiveDataSource,
+            DefaultDeviceCommunicator,
             createBlinkersLocalDataSource(context)
         )
         blinkersRepository = newRepo

@@ -3,7 +3,6 @@ package app.blinkers
 import android.util.Log
 import androidx.lifecycle.*
 import app.blinkers.data.*
-import app.blinkers.data.BrainWaves
 import app.blinkers.data.source.BlinkersRepository
 import kotlinx.coroutines.launch
 import java.lang.Exception
@@ -28,11 +27,12 @@ class ControllerViewModel(
     private val _dataLoading = MutableLiveData<Boolean>()
     val dataLoading: LiveData<Boolean> = _dataLoading
 
+    var observeConnectionStatus: LiveData<Result<String>> = blinkersRepository.observeConnectionStatus()
 
-    var observeBrainWaves: LiveData<Result<BrainWaves>> = blinkersRepository.observeLatestBlinkersState().map {
+    var observeBrainWaves: LiveData<Result<EEGSnapshot>> = blinkersRepository.observeLatestDeviceState().map {
         return@map when (it) {
             is Result.Success -> {
-                Result.Success(it.data.brainWaves)
+                Result.Success(it.data.eegSnapshot)
             }
             is Result.Error -> {
                 Result.Error(it.exception)
@@ -40,7 +40,7 @@ class ControllerViewModel(
             else -> Result.Error(Exception("Unknown"))
         }
     }
-    var observeLed: LiveData<Result<Int>> = blinkersRepository.observeLatestBlinkersState().map {
+    var observeLed: LiveData<Result<Int>> = blinkersRepository.observeLatestDeviceState().map {
         return@map when (it) {
             is Result.Success -> {
                 Result.Success(it.data.ledStatus)

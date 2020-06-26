@@ -114,6 +114,14 @@ class ControllerFragment : Fragment(), CoroutineScope {
             }
         })
 
+        viewModel.observeConnectionStatus.observe(viewLifecycleOwner, Observer {
+            if (it is Result.Success) {
+                status(it.data)
+            } else if (it is Result.Error) {
+                status(it.exception.message!!)
+            }
+        })
+
         startTime = System.currentTimeMillis()
 
         receiveText =
@@ -209,7 +217,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
                 if (device.name != null) device.name else device.address
             status("connecting...")
             connected = Connected.Pending
-            BlinkersLiveDataSource.connect(this@ControllerFragment.requireContext(), device)
+            DefaultDeviceCommunicator.connect(this@ControllerFragment.requireContext(), device)
             connected = Connected.True
             //   service!!.connect("Connected to $deviceName")
             //    socket!!.connect(context, viewModel, device)
@@ -255,7 +263,7 @@ class ControllerFragment : Fragment(), CoroutineScope {
         }
     }
 
-    private fun receive(data: BrainWaves) {
+    private fun receive(data: EEGSnapshot) {
 //        with(data) {
 //            setBrainData(listOf(
 //                signalStrength,

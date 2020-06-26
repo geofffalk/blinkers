@@ -1,16 +1,21 @@
 package app.blinkers.data.source
 
 import androidx.lifecycle.LiveData
-import app.blinkers.data.BlinkersState
+import app.blinkers.data.DeviceState
+import app.blinkers.data.EmotionalSnapshot
 import app.blinkers.data.Result
 
 interface BlinkersDataSource {
 
-    fun observeLastBlinkerState() : LiveData<Result<BlinkersState>>
+    fun observeLastBlinkerState() : LiveData<Result<DeviceState>>
 
-    suspend fun saveBlinkerState(blinkersState: BlinkersState)
+    suspend fun saveDeviceState(deviceState: DeviceState)
 
-    suspend fun getBlinkerStates(): Result<List<BlinkersState>>
+    suspend fun getDeviceStates(): Result<List<DeviceState>>
 
-    suspend fun deleteAllStates()
+    suspend fun getDeviceStatesFrom(timestamp: Long): Result<List<DeviceState>>
+
+    suspend fun saveEmotionalSnapshot(emotionalSnapshot: EmotionalSnapshot)
+
+    suspend fun getEmotionalSnapshotsFrom(timestamp: Long): Result<List<EmotionalSnapshot>>
 }
