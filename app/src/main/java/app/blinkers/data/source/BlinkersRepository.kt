@@ -1,15 +1,16 @@
 package app.blinkers.data.source
 
 import androidx.lifecycle.LiveData
+import app.blinkers.data.BlinkersStatus
 import app.blinkers.data.DeviceState
 import app.blinkers.data.EmotionalSnapshot
 import app.blinkers.data.Result
 
 interface BlinkersRepository {
 
-    fun observeLatestDeviceState(): LiveData<Result<DeviceState>>
+    fun observeBlinkersStatus(): LiveData<BlinkersStatus>
 
-    fun observeConnectionStatus(): LiveData<Result<String>>
+    fun recordDeviceState(doRecord: Boolean)
 
     suspend fun setLedState(isOn: Boolean)
 

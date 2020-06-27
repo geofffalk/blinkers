@@ -21,7 +21,6 @@ interface DeviceCommunicator {
     fun disconnect()
     suspend fun updateLed(isOn: Boolean)
     fun observeLatestDeviceState(): LiveData<Result<DeviceState>>
-    fun observeConnectionStatus(): LiveData<Result<String>>
 }
 
 object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
@@ -93,14 +92,14 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
         try {
             socket = device.createRfcommSocketToServiceRecord(BLUETOOTH_SPP)
             socket.connect()
-            _connectionStatus.postValue(Result.Success("$device is connected successfully"))
+            _currentDeviceState.postValue(Result.Success(DeviceState()))
             isConnected = true
         } catch (e: Exception) {
-            _connectionStatus.postValue(Result.Error(e))
+            _currentDeviceState.postValue(Result.Error(e))
             try {
                 disconnect()
             } catch (e: Exception) {
-                _connectionStatus.postValue(Result.Error(e))
+                _currentDeviceState.postValue(Result.Error(e))
             }
         }
 
@@ -161,8 +160,6 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
             _currentDeviceState.postValue(Result.Error(e))
         }
     }
-
-    override fun observeConnectionStatus(): LiveData<Result<String>> = _connectionStatus
 
     override fun observeLatestDeviceState(): LiveData<Result<DeviceState>> = currentDeviceState
 }

@@ -9,7 +9,7 @@ import androidx.room.PrimaryKey
 data class DeviceState @JvmOverloads constructor(
     @PrimaryKey @ColumnInfo(name = "timestamp") var timestamp: Long = 0,
     @ColumnInfo(name = "ledStatus") var ledStatus: Int = -1,
-    @Embedded val eegSnapshot: EEGSnapshot) {
+    @Embedded val eegSnapshot: EEGSnapshot? = null) {
 }
 
 data class EEGSnapshot(

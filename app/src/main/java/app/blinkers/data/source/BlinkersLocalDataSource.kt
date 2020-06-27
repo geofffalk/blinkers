@@ -41,8 +41,24 @@ class BlinkersLocalDataSource internal constructor(
         }
     }
 
+    override suspend fun getLastDeviceState(): Result<DeviceState> = withContext(ioDispatcher)  {
+        return@withContext try {
+            Success(blinkerDao.getLastDeviceState())
+        } catch (e: Exception) {
+            Error(e)
+        }
+    }
+
     override suspend fun saveEmotionalSnapshot(emotionalSnapshot: EmotionalSnapshot) = withContext(ioDispatcher) {
         blinkerDao.insertEmotionalSnapshot(emotionalSnapshot)
+    }
+
+    override suspend fun getLastEmotionalSnapshot(): Result<EmotionalSnapshot> = withContext(ioDispatcher) {
+        return@withContext try {
+            Success(blinkerDao.getLastEmotionalSnapshot())
+        } catch (e: Exception) {
+            Error(e)
+        }
     }
 
     override suspend fun getEmotionalSnapshotsFrom(timestamp: Long): Result<List<EmotionalSnapshot>> = withContext(ioDispatcher) {

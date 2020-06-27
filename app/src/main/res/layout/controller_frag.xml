@@ -19,7 +19,7 @@
         android:layout_height="match_parent">
 
         <LinearLayout
-            android:id="@+id/ledLayout"
+            android:id="@+id/deviceControlPanel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -30,18 +30,23 @@
             android:gravity="center"
             android:layout_margin="10dp">
 
-        <Switch
-            android:id="@+id/ledSwitch"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:layout_marginBottom="10dp"
-            android:text="LED"  />
-
-            <TextView
-                android:id="@+id/ledStatus"
+            <Switch
+                android:id="@+id/eegRecording"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_marginStart="20dp"/>
+                android:layout_height="50dp"
+                android:layout_marginBottom="10dp"
+                android:checked="@{viewmodel.isRecording}"
+                android:onClick="@{(view) -> viewmodel.recordDeviceState(((CompoundButton)view).isChecked())}"
+                android:text="RECORD EEG"  />
+
+            <Switch
+                android:id="@+id/ledSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_marginBottom="10dp"
+                android:checked="@{viewmodel.ledIsOn}"
+                android:onClick="@{(view) -> viewmodel.switchLed(((CompoundButton)view).isChecked())}"
+                android:text="LED"  />
 
         </LinearLayout>
 
@@ -52,13 +57,13 @@
             android:orientation="vertical"
             android:layout_margin="10dp"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/terminal"
+            app:layout_constraintBottom_toTopOf="@+id/blinkerStatus"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/ledLayout">
+            app:layout_constraintTop_toBottomOf="@+id/deviceControlPanel">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:orientation="horizontal">
 
                 <ImageView
@@ -94,12 +99,17 @@
 
             <androidx.appcompat.widget.AppCompatSeekBar
                 android:id="@+id/seekbar_valence"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="15dp"
+                android:progress="@={viewmodel.valence}"
+                android:max="10" />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:orientation="horizontal">
 
                 <ImageView
@@ -141,12 +151,17 @@
 
             <androidx.appcompat.widget.AppCompatSeekBar
                 android:id="@+id/seekbar_arousal"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="15dp"
+                android:progress="@={viewmodel.arousal}"
+                android:max="10" />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:orientation="horizontal">
 
                 <ImageView
@@ -187,58 +202,38 @@
 
             <androidx.appcompat.widget.AppCompatSeekBar
                 android:id="@+id/seekbar_dominance"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="15dp"
+                android:progress="@={viewmodel.dominance}"
+                android:max="10" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:text="@string/commit"
+                android:textAlignment="center"
+                android:textAllCaps="true"
+                android:onClick="@{() -> viewmodel.saveEmotionalSnapshot()}"/>
 
         </LinearLayout>
 
-
-        <LinearLayout
-            android:id="@+id/terminal"
-            android:layout_height="0dp"
+        <TextView
+            android:id="@+id/blinkerStatus"
             android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:freezesText="true"
+            android:scrollbars="vertical"
+            android:text="@={viewmodel.statusText}"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@id/emotionButtons"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/receive_text"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:freezesText="true"
-                android:gravity="bottom"
-                android:scrollbars="vertical"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
-
-            <View
-                android:layout_width="match_parent"
-                android:background="?android:attr/listDivider"
-                android:layout_height="2dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <EditText
-                    android:id="@+id/send_text"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:inputType="text|textNoSuggestions"
-                    android:singleLine="true" />
-
-                <ImageButton
-                    android:id="@+id/send_btn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:srcCompat="@drawable/ic_send_white_24dp" />
-            </LinearLayout>
-
-        </LinearLayout>
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
