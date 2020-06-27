@@ -30,22 +30,22 @@
             android:gravity="center"
             android:layout_margin="10dp">
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/eegRecording"
                 android:layout_width="wrap_content"
                 android:layout_height="50dp"
                 android:layout_marginBottom="10dp"
                 android:checked="@{viewmodel.isRecording}"
-                android:onClick="@{(view) -> viewmodel.switchLed(((CompoundButton)view).isChecked())}"
+                android:onCheckedChanged="@{(view, bool) -> viewmodel.recordDeviceState(bool)}"
                 android:text="RECORD EEG"  />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/ledSwitch"
                 android:layout_width="wrap_content"
                 android:layout_height="50dp"
                 android:layout_marginBottom="10dp"
                 android:checked="@{viewmodel.ledIsOn}"
-                android:onClick="@{(view) -> viewmodel.switchLed(((CompoundButton)view).isChecked())}"
+                android:onCheckedChanged="@{(view, bool) -> viewmodel.switchLed(bool)}"
                 android:text="LED"  />
 
         </LinearLayout>
