@@ -17,8 +17,12 @@ class BlinkersLocalDataSource internal constructor(
     private val blinkerDao: BlinkerDao,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ): BlinkersDataSource {
-    override fun observeLastBlinkerState(): LiveData<Result<DeviceState>> = blinkerDao.observeLatestDeviceState().map {
+    override fun observeLastDeviceState(): LiveData<Result<DeviceState>> = blinkerDao.observeLatestDeviceState().map {
             Success(it)
+    }
+
+    override fun observeLastEmotionalSnapshot(): LiveData<Result<EmotionalSnapshot>> = blinkerDao.observeLatestEmotionalSnapshot().map {
+        Success(it)
     }
 
     override suspend fun saveDeviceState(deviceState: DeviceState) = withContext(ioDispatcher) {
@@ -41,24 +45,8 @@ class BlinkersLocalDataSource internal constructor(
         }
     }
 
-    override suspend fun getLastDeviceState(): Result<DeviceState> = withContext(ioDispatcher)  {
-        return@withContext try {
-            Success(blinkerDao.getLastDeviceState())
-        } catch (e: Exception) {
-            Error(e)
-        }
-    }
-
     override suspend fun saveEmotionalSnapshot(emotionalSnapshot: EmotionalSnapshot) = withContext(ioDispatcher) {
         blinkerDao.insertEmotionalSnapshot(emotionalSnapshot)
-    }
-
-    override suspend fun getLastEmotionalSnapshot(): Result<EmotionalSnapshot> = withContext(ioDispatcher) {
-        return@withContext try {
-            Success(blinkerDao.getLastEmotionalSnapshot())
-        } catch (e: Exception) {
-            Error(e)
-        }
     }
 
     override suspend fun getEmotionalSnapshotsFrom(timestamp: Long): Result<List<EmotionalSnapshot>> = withContext(ioDispatcher) {

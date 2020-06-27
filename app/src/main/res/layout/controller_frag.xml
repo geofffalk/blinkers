@@ -228,6 +228,7 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:freezesText="true"
+            android:textSize="12dp"
             android:scrollbars="vertical"
             android:text="@{viewmodel.statusText}"
             app:layout_constraintLeft_toLeftOf="parent"

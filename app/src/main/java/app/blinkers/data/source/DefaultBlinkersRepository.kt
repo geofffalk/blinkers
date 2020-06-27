@@ -1,13 +1,7 @@
 package app.blinkers.data.source
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
-import androidx.lifecycle.Transformations
-import androidx.lifecycle.map
-import app.blinkers.data.BlinkersStatus
-import app.blinkers.data.DeviceState
-import app.blinkers.data.EmotionalSnapshot
-import app.blinkers.data.Result
+import androidx.lifecycle.*
+import app.blinkers.data.*
 import kotlinx.coroutines.*
 import timber.log.Timber
 
@@ -35,11 +29,50 @@ class DefaultBlinkersRepository(
             }
 
 
-    override fun observeBlinkersStatus(): LiveData<BlinkersStatus> = Transformations.map(deviceCommunicator.observeLatestDeviceState()) {
-        if (it is Result.Success) {
-            BlinkersStatus(true, isRecordingDeviceState, it.data.ledStatus == 1, lastEmotionalSnapshot, it.data.eegSnapshot)
-        } else
-        BlinkersStatus(false, isRecordingDeviceState, false, lastEmotionalSnapshot, null, (it as? Result.Error)?.exception?.message)
+    override fun observeBlinkersStatus(): LiveData<BlinkersStatus>  {
+        val deviceLiveData = deviceCommunicator.observeLatestDeviceState();
+        val emotionLiveData = localDataSource.observeLastEmotionalSnapshot();
+
+        val result = MediatorLiveData<BlinkersStatus>()
+
+        result.addSource(deviceLiveData) {
+            result.value = combineDataSources(deviceLiveData, emotionLiveData)
+        }
+
+        result.addSource(emotionLiveData) {
+            result.value = combineDataSources(deviceLiveData, emotionLiveData)
+        }
+
+        return result
+    }
+
+    private fun combineDataSources(
+        deviceLiveData: LiveData<Result<DeviceState>>,
+        emotionLiveData: LiveData<Result<EmotionalSnapshot>>
+    ): BlinkersStatus? {
+        var isConnected = false
+        var isLedOn = false
+        var latestEmotionalSnapshot: EmotionalSnapshot? = null
+        var latestEEGSnapshot: EEGSnapshot? = null
+        var errorMessage: String? = null
+
+        (deviceLiveData.value as? Result.Success)?.apply {
+            isConnected = true
+            isLedOn = this.data.ledStatus == 1
+            latestEEGSnapshot = this.data.eegSnapshot
+        }
+
+        (deviceLiveData.value as? Result.Error)?.apply {
+            isConnected = false
+            errorMessage = this.exception.message
+        }
+
+        (emotionLiveData.value as? Result.Success)?.data?.apply {
+            latestEmotionalSnapshot = EmotionalSnapshot(this.timestamp, this.valence, this.arousal, this.dominance)
+        }
+
+
+        return BlinkersStatus(isConnected, isRecordingDeviceState, isLedOn, latestEmotionalSnapshot, latestEEGSnapshot, errorMessage)
     }
 
     override fun recordDeviceState(doRecord: Boolean) {

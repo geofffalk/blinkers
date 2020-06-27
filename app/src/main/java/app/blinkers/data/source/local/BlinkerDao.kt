@@ -14,6 +14,9 @@ interface BlinkerDao {
     @Query("SELECT * FROM DeviceState ORDER BY timestamp DESC LIMIT 1")
     fun observeLatestDeviceState(): LiveData<DeviceState>
 
+    @Query("SELECT * FROM EmotionalSnapshot ORDER BY timestamp DESC LIMIT 1")
+    fun observeLatestEmotionalSnapshot(): LiveData<EmotionalSnapshot>
+
     @Query("SELECT * from DeviceState")
     suspend fun getDeviceStates(): List<DeviceState>
 
@@ -22,12 +25,6 @@ interface BlinkerDao {
 
     @Query("SELECT * from EmotionalSnapshot WHERE timestamp > :timestamp")
     suspend fun getEmotionalSnapshotsFrom(timestamp: Long): List<EmotionalSnapshot>
-
-    @Query("SELECT * FROM DeviceState ORDER BY timestamp DESC LIMIT 1")
-    suspend fun getLastDeviceState(): DeviceState
-
-    @Query("SELECT * FROM EmotionalSnapshot ORDER BY timestamp DESC LIMIT 1")
-    suspend fun getLastEmotionalSnapshot(): EmotionalSnapshot
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDeviceState(deviceState: DeviceState)

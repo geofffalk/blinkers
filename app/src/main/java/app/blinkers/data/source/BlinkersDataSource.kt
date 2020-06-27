@@ -7,7 +7,9 @@ import app.blinkers.data.Result
 
 interface BlinkersDataSource {
 
-    fun observeLastBlinkerState() : LiveData<Result<DeviceState>>
+    fun observeLastDeviceState() : LiveData<Result<DeviceState>>
+
+    fun observeLastEmotionalSnapshot() : LiveData<Result<EmotionalSnapshot>>
 
     suspend fun saveDeviceState(deviceState: DeviceState)
 
@@ -15,11 +17,7 @@ interface BlinkersDataSource {
 
     suspend fun getDeviceStatesFrom(timestamp: Long): Result<List<DeviceState>>
 
-    suspend fun getLastDeviceState(): Result<DeviceState>
-
     suspend fun saveEmotionalSnapshot(emotionalSnapshot: EmotionalSnapshot)
-
-    suspend fun getLastEmotionalSnapshot(): Result<EmotionalSnapshot>
 
     suspend fun getEmotionalSnapshotsFrom(timestamp: Long): Result<List<EmotionalSnapshot>>
 }
