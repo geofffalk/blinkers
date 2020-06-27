@@ -36,7 +36,7 @@
                 android:layout_height="50dp"
                 android:layout_marginBottom="10dp"
                 android:checked="@{viewmodel.isRecording}"
-                android:onClick="@{(view) -> viewmodel.recordDeviceState(((CompoundButton)view).isChecked())}"
+                android:onClick="@{(view) -> viewmodel.switchLed(((CompoundButton)view).isChecked())}"
                 android:text="RECORD EEG"  />
 
             <Switch
@@ -228,7 +228,7 @@
             android:layout_weight="1"
             android:freezesText="true"
             android:scrollbars="vertical"
-            android:text="@={viewmodel.statusText}"
+            android:text="@{viewmodel.statusText}"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
