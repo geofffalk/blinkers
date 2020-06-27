@@ -45,60 +45,152 @@
 
         </LinearLayout>
 
-        <RadioGroup
+        <LinearLayout
             android:id="@+id/emotionButtons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:layout_margin="10dp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintBottom_toTopOf="@+id/terminal"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/ledLayout">
 
-            <RadioButton
-                android:id="@+id/r0"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_margin="7dp"
-                android:text="-3"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-            <RadioButton
-                android:id="@+id/r1"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_margin="7dp"
-                android:text="-2"/>
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_valence1" />
 
-            <RadioButton
-                android:id="@+id/r2"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_margin="7dp"
-                android:text="-1"/>
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_valence2" />
 
-            <RadioButton
-                android:id="@+id/r3"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_margin="7dp"
-                android:text="0"/>
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_valence3" />
 
-            <RadioButton
-                android:id="@+id/r4"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_margin="7dp"
-                android:text="1"/>
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_valence4" />
 
-            <RadioButton
-                android:id="@+id/r5"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_margin="7dp"
-                android:text="2"/>
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_valence5" />
+            </LinearLayout>
 
-        </RadioGroup>
+            <androidx.appcompat.widget.AppCompatSeekBar
+                android:id="@+id/seekbar_valence"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_arousal1"
+                    android:layout_gravity="start"/>
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_arousal2"
+                    android:layout_gravity="center_horizontal"/>
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_arousal3"
+                    android:layout_gravity="center_horizontal"/>
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_arousal4"
+                    android:layout_gravity="center_horizontal"/>
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_arousal5"
+                    android:layout_gravity="end" />
+            </LinearLayout>
+
+
+            <androidx.appcompat.widget.AppCompatSeekBar
+                android:id="@+id/seekbar_arousal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_dominance1"
+                    android:layout_gravity="start"/>
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_dominance2"
+                    android:layout_gravity="center_horizontal"/>
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_dominance3"
+                    android:layout_gravity="center_horizontal"/>
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_dominance4"
+                    android:layout_gravity="center_horizontal"/>
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_dominance5"
+                    android:layout_gravity="end" />
+            </LinearLayout>
+
+            <androidx.appcompat.widget.AppCompatSeekBar
+                android:id="@+id/seekbar_dominance"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </LinearLayout>
 
 
         <LinearLayout
