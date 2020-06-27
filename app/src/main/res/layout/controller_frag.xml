@@ -5,6 +5,7 @@
     <data>
 
         <import type="android.view.View" />
+        <import type="android.widget.CompoundButton" />
 
         <import type="androidx.core.content.ContextCompat" />
 
@@ -36,7 +37,7 @@
                 android:layout_height="50dp"
                 android:layout_marginBottom="10dp"
                 android:checked="@{viewmodel.isRecording}"
-                android:onCheckedChanged="@{(view, bool) -> viewmodel.recordDeviceState(bool)}"
+                android:onClick="@{(view) -> viewmodel.recordDeviceState(((CompoundButton)view).isChecked())}"
                 android:text="RECORD EEG"  />
 
             <androidx.appcompat.widget.SwitchCompat
@@ -45,7 +46,7 @@
                 android:layout_height="50dp"
                 android:layout_marginBottom="10dp"
                 android:checked="@{viewmodel.ledIsOn}"
-                android:onCheckedChanged="@{(view, bool) -> viewmodel.switchLed(bool)}"
+                android:onClick="@{(view) -> viewmodel.switchLed(((CompoundButton)view).isChecked())}"
                 android:text="LED"  />
 
         </LinearLayout>

@@ -9,6 +9,7 @@ import app.blinkers.data.DeviceState
 import app.blinkers.data.EmotionalSnapshot
 import app.blinkers.data.Result
 import kotlinx.coroutines.*
+import timber.log.Timber
 
 class DefaultBlinkersRepository(
     private val deviceCommunicator: DeviceCommunicator,
@@ -17,6 +18,7 @@ class DefaultBlinkersRepository(
 ) : BlinkersRepository {
 
     private var isRecordingDeviceState = false
+    private var lastEmotionalSnapshot : EmotionalSnapshot? = null;
 
         init {
             val blinkerObserver = Observer<Result<DeviceState>> { blinkerState ->
@@ -34,17 +36,10 @@ class DefaultBlinkersRepository(
 
 
     override fun observeBlinkersStatus(): LiveData<BlinkersStatus> = Transformations.map(deviceCommunicator.observeLatestDeviceState()) {
-        var latestEmotionalSnapshot: EmotionalSnapshot? = null;
-        GlobalScope.launch {
-            val result = localDataSource.getLastEmotionalSnapshot()
-            (result as? Result.Success)?.apply {
-                latestEmotionalSnapshot = this.data
-            }
-        }
         if (it is Result.Success) {
-            BlinkersStatus(true, isRecordingDeviceState, it.data.ledStatus == 1, latestEmotionalSnapshot, it.data.eegSnapshot)
-        }
-        BlinkersStatus(false, isRecordingDeviceState, false, latestEmotionalSnapshot, null, (it as? Result.Error)?.exception?.message)
+            BlinkersStatus(true, isRecordingDeviceState, it.data.ledStatus == 1, lastEmotionalSnapshot, it.data.eegSnapshot)
+        } else
+        BlinkersStatus(false, isRecordingDeviceState, false, lastEmotionalSnapshot, null, (it as? Result.Error)?.exception?.message)
     }
 
     override fun recordDeviceState(doRecord: Boolean) {
@@ -56,6 +51,7 @@ class DefaultBlinkersRepository(
     }
 
     override suspend fun saveEmotionSnapshot(snapshot: EmotionalSnapshot) {
+        lastEmotionalSnapshot = snapshot;
         localDataSource.saveEmotionalSnapshot(snapshot)
     }
 
