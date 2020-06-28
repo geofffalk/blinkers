@@ -4,15 +4,11 @@ import androidx.lifecycle.*
 import app.blinkers.data.*
 import app.blinkers.data.source.BlinkersRepository
 import kotlinx.coroutines.launch
-import java.lang.Exception
 
 class ControllerViewModel(
     private val blinkersRepository: BlinkersRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-
-    private var connected = false
-    private var notificationMsg: String? = null
 
     val dominance = MutableLiveData<Int>()
     val valence = MutableLiveData<Int>()
@@ -26,20 +22,9 @@ class ControllerViewModel(
        it.isRecording
    }
 
-    var observeBrainWaves: LiveData<Result<EEGSnapshot>> = blinkersRepository.observeBlinkersStatus().map { blinkersStatus ->
-        blinkersStatus.latestEEGSnapshot?.let {
-            Result.Success(it)
-        }
-        Result.Error(Exception("No EEG results"))
-    }
-
     val ledIsOn: LiveData<Boolean> = blinkersRepository.observeBlinkersStatus().map { blinkersStatus ->
         blinkersStatus.isLedOn
     }
-
-    private val _snackbarText = MutableLiveData<Event<Int>>()
-    val snackbarText: LiveData<Event<Int>> = _snackbarText
-
 
     fun switchLed(isOn: Boolean) = viewModelScope.launch {
         blinkersRepository.setLedState(isOn)
@@ -59,5 +44,15 @@ class ControllerViewModel(
 
     fun recordDeviceState(doRecord: Boolean) {
             blinkersRepository.recordDeviceState(doRecord)
+    }
+
+    suspend fun getDeviceData(): List<DeviceState>? {
+        val result = blinkersRepository.getDeviceStatesFrom(0)
+        return (result as? Result.Success)?.data
+    }
+
+    suspend fun getEmotionData(): List<EmotionalSnapshot>? {
+        val result = blinkersRepository.getEmotionalStatesFrom(0)
+        return (result as? Result.Success)?.data
     }
 }

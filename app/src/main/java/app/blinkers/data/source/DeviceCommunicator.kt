@@ -39,20 +39,19 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
     private val _currentDeviceState = MutableLiveData<Result<DeviceState>>()
     private val currentDeviceState: LiveData<Result<DeviceState>> = _currentDeviceState
 
-    private val _connectionStatus = MutableLiveData<Result<String>>();
 
     init {
         disconnectBroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-                _connectionStatus.postValue(Result.Error(IOException("background disconnect")))
-                disconnect() // disconnect now, else would be queued until UI re-attached
+                _currentDeviceState.postValue(Result.Error(IOException("background disconnect")))
+                disconnect()
             }
         }
     }
 
     override fun connect(context: Context, device: BluetoothDevice) {
         if (isConnected) {
-            _connectionStatus.postValue(Result.Error(IOException("Already connected")))
+            _currentDeviceState.postValue(Result.Error(IOException("Already connected")))
             return
         }
         this.device = device
@@ -68,7 +67,7 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
         try {
             socket.close()
         } catch (e: Exception) {
-            _connectionStatus.postValue(Result.Error(e))
+            _currentDeviceState.postValue(Result.Error(e))
         }
 
         try {

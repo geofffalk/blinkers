@@ -88,12 +88,12 @@ class DefaultBlinkersRepository(
         localDataSource.saveEmotionalSnapshot(snapshot)
     }
 
-    override suspend fun getDeviceStatesFrom(timestamp: Long) {
-        localDataSource.getDeviceStatesFrom(timestamp)
+    override suspend fun getDeviceStatesFrom(timestamp: Long): Result<List<DeviceState>> {
+        return localDataSource.getDeviceStatesFrom(timestamp)
     }
 
-    override suspend fun getEmotionalStatesFrom(timestamp: Long) {
-        localDataSource.getEmotionalSnapshotsFrom(timestamp)
+    override suspend fun getEmotionalStatesFrom(timestamp: Long): Result<List<EmotionalSnapshot>> {
+        return localDataSource.getEmotionalSnapshotsFrom(timestamp)
     }
 
 }

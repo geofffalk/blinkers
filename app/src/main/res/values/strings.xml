@@ -11,4 +11,6 @@
     <string name="devices">Devices</string>
     <string name="submit">Submit</string>
     <string name="commit">Commit</string>
+    <string name="export_device_data">Export device data</string>
+    <string name="export_emotional_snapshots">Export emotional snapshots</string>
 </resources>

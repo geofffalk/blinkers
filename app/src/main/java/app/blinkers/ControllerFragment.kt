@@ -1,32 +1,25 @@
 package app.blinkers
 
-import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothSocket
-import android.content.DialogInterface
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
-import android.text.Spannable
-import android.text.SpannableStringBuilder
-import android.text.method.ScrollingMovementMethod
-import android.text.style.ForegroundColorSpan
+import android.text.format.DateFormat.format
 import android.view.*
-import android.widget.TextView
-import android.widget.Toast
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.navArgs
-import app.blinkers.data.*
-import app.blinkers.data.source.*
-import app.blinkers.data.source.local.BlinkerDao
+import app.blinkers.data.source.DefaultDeviceCommunicator
 import app.blinkers.databinding.ControllerFragBinding
-import com.github.mikephil.charting.charts.LineChart
-import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.controller_frag.view.*
+import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
@@ -47,14 +40,13 @@ class ControllerFragment : Fragment(), CoroutineScope {
         get() = Dispatchers.IO
 
     private var deviceAddress: String? = null
-    private var newline = "\r\n"
 
     private var initialStart = true
     private var connected = Connected.False
-    private var startTime = System.currentTimeMillis();
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
         deviceAddress = requireArguments().getString("device")
     }
 
@@ -67,37 +59,6 @@ class ControllerFragment : Fragment(), CoroutineScope {
         viewDataBinding = ControllerFragBinding.inflate(inflater, container, false).apply {
             viewmodel = viewModel
         }
-//
-//        viewModel.observeBrainWaves.observe(viewLifecycleOwner, Observer {
-//            if (it is Result.Success) receive(it.data)
-//            else if (it is Result.Error) receiveText.append("${it.exception}\n")
-//        })
-//
-//        viewModel.observeLed.observe(viewLifecycleOwner, Observer {
-//            if (it is Result.Success) {
-//                view.ledStatus.text = if (it.data == 1) "Led is ON" else "Led is OFF"
-//            } else if (it is Result.Error) {
-//                view.ledStatus.text = it.exception.message
-//            }
-//        })
-//
-//        viewModel.observeConnectionStatus.observe(viewLifecycleOwner, Observer {
-//            if (it is Result.Success) {
-//                status(it.data)
-//            } else if (it is Result.Error) {
-//                status(it.exception.message!!)
-//            }
-//        })
-
- //       startTime = System.currentTimeMillis()
-
-//        receiveText =
-//            view.findViewById(R.id.receive_text) // TextView performance decreases with number of spans
-//
-//        receiveText.setTextColor(resources.getColor(R.color.colorRecieveText)) // set as default color to reduce number of spans
-//
-//        receiveText.movementMethod = ScrollingMovementMethod.getInstance()
-
         return viewDataBinding.root
     }
 
@@ -105,6 +66,70 @@ class ControllerFragment : Fragment(), CoroutineScope {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewDataBinding.lifecycleOwner = this.viewLifecycleOwner
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_controller, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.export_device_data -> {
+                exportEEGDatabaseToCSVFile()
+                true
+            }
+            R.id.export_emotion -> {
+                exportEmotionDatabaseToCSVFile()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun exportEmotionDatabaseToCSVFile() {
+        launch {
+            val csvFile = File(context?.filesDir, "emotional_data.csv")
+            csvFile.createNewFile()
+            val emotionData =
+                withContext(Dispatchers.IO) { viewModel.getEmotionData() }
+            csvWriter().open(csvFile, append = false) {
+                writeRow(listOf("Date", "Timestamp", "Valence", "Arousal", "Dominance"))
+                        emotionData?.forEach {
+                        writeRow(listOf(format("EEE, d MMM HH:mm:ss", it.timestamp), it.timestamp, it.valence, it.arousal, it.dominance))
+                }
+            }
+            val intent = goToFileIntent(requireContext(), csvFile)
+            startActivity(intent)
+        }
+    }
+
+    private fun exportEEGDatabaseToCSVFile() {
+        launch {
+            val csvFile = File(context?.filesDir, "eeg_data.csv")
+            csvFile.createNewFile()
+            val deviceData =
+                withContext(Dispatchers.IO) { viewModel.getDeviceData() }
+            csvWriter().open(csvFile, append = false) {
+                writeRow(listOf("Date", "Timestamp", "Signal strength", "Delta", "Theta", "lowAlpha", "highAlpha", "lowBeta", "highBeta", "lowGamma", "highGamma"))
+                deviceData?.forEach {
+                    it.eegSnapshot?.let { eeg ->
+                    writeRow(listOf(format("EEE, d MMM HH:mm:ss", it.timestamp), it.timestamp, eeg.signalStrength, eeg.delta, eeg.theta, eeg.lowAlpha, eeg.highAlpha, eeg.lowBeta, eeg.highBeta, eeg.lowGamma, eeg.highGamma))
+                    }
+                }
+            }
+            val intent = goToFileIntent(requireContext(), csvFile)
+            startActivity(intent)
+        }
+    }
+
+    private fun goToFileIntent(context: Context, file: File): Intent {
+        val intent = Intent(Intent.ACTION_VIEW)
+        val contentUri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        val mimeType = context.contentResolver.getType(contentUri)
+        intent.setDataAndType(contentUri, mimeType)
+        intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+
+        return intent
     }
 
 
@@ -128,16 +153,10 @@ class ControllerFragment : Fragment(), CoroutineScope {
         try {
             val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
             val device = bluetoothAdapter.getRemoteDevice(deviceAddress)
-            val deviceName =
-                if (device.name != null) device.name else device.address
-         //   status("connecting...")
             connected = Connected.Pending
             DefaultDeviceCommunicator.connect(this@ControllerFragment.requireContext(), device)
             connected = Connected.True
-            //   service!!.connect("Connected to $deviceName")
-            //    socket!!.connect(context, viewModel, device)
         } catch (e: Exception) {
-         //   status("connection failed: ${e.message}")
             disconnect()
         }
     }
@@ -150,100 +169,9 @@ class ControllerFragment : Fragment(), CoroutineScope {
             btSocket = null
         }
     }
-
-//    private fun send(str: String) {
-//        if (connected != Connected.True) {
-//            Toast.makeText(activity, "not connected", Toast.LENGTH_SHORT).show()
-//            return
-//        }
-//        try {
-//            val spn = SpannableStringBuilder(
-//                """
-//                    $str
-//
-//                    """.trimIndent()
-//            )
-//            spn.setSpan(
-//                ForegroundColorSpan(resources.getColor(R.color.colorSendText)),
-//                0,
-//                spn.length,
-//                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-//            )
-//            receiveText .append(spn)
-//            val data = (str + newline).toByteArray()
-//            viewModel.switchLed(data.contentEquals("1".toByteArray()))
-//        } catch (e: Exception) {
-//            status("connection lost: ${e.message}")
-//            disconnect()
-//        }
-//    }
-
- //   private fun receive(data: EEGSnapshot) {
-//        with(data) {
-//            setBrainData(listOf(
-//                signalStrength,
-//                delta,
-//                theta,
-//                lowAlpha,
-//                highAlpha,
-//                lowBeta,
-//                highBeta,
-//                lowGamma,
-//                highGamma
-//            ))
-//        }
-
-  //      receiveText.append("${data}\n")
-
-  //  }
-
-//    private fun status(str: String) {
-//        val spn = SpannableStringBuilder(
-//            """
-//                $str
-//
-//                """.trimIndent()
-//        )
-//        spn.setSpan(
-//            ForegroundColorSpan(resources.getColor(R.color.colorStatusText)),
-//            0,
-//            spn.length,
-//            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-//        )
-//        receiveText.append(spn)
-//    }
-
 }
 
 fun Fragment.getViewModelFactory(): ViewModelFactory {
     val repository = (requireContext().applicationContext as BlinkersApp).blinkersRepository
     return ViewModelFactory(repository, this)
-}
-
-fun View.setupSnackbar(
-    lifecycleOwner: LifecycleOwner,
-    snackbarEvent: LiveData<Event<Int>>,
-    timeLength: Int
-) {
-
-    snackbarEvent.observe(lifecycleOwner, Observer { event ->
-        event.getContentIfNotHandled()?.let {
-            showSnackbar(context.getString(it), timeLength)
-        }
-    })
-}
-
-fun View.showSnackbar(snackbarText: String, timeLength: Int) {
-    Snackbar.make(this, snackbarText, timeLength).run {
-        addCallback(object : Snackbar.Callback() {
-            override fun onShown(sb: Snackbar?) {
-                //   EspressoIdlingResource.increment()
-            }
-
-            override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                //   EspressoIdlingResource.decrement()
-            }
-        })
-        show()
-    }
 }

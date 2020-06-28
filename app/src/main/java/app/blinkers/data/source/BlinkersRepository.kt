@@ -16,7 +16,7 @@ interface BlinkersRepository {
 
     suspend fun saveEmotionSnapshot(emotionalSnapshot: EmotionalSnapshot)
 
-    suspend fun getDeviceStatesFrom(timestamp: Long)
+    suspend fun getDeviceStatesFrom(timestamp: Long): Result<List<DeviceState>>
 
-    suspend fun getEmotionalStatesFrom(timestamp: Long)
+    suspend fun getEmotionalStatesFrom(timestamp: Long): Result<List<EmotionalSnapshot>>
 }
