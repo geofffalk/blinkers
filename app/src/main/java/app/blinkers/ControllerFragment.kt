@@ -59,6 +59,9 @@ class ControllerFragment : Fragment(), CoroutineScope {
         viewDataBinding = ControllerFragBinding.inflate(inflater, container, false).apply {
             viewmodel = viewModel
         }
+
+        viewDataBinding.root.keepScreenOn = true
+
         return viewDataBinding.root
     }
 

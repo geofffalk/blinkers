@@ -30,8 +30,8 @@ class DefaultBlinkersRepository(
 
 
     override fun observeBlinkersStatus(): LiveData<BlinkersStatus>  {
-        val deviceLiveData = deviceCommunicator.observeLatestDeviceState();
-        val emotionLiveData = localDataSource.observeLastEmotionalSnapshot();
+        val deviceLiveData = deviceCommunicator.observeLatestDeviceState()
+        val emotionLiveData = localDataSource.observeLastEmotionalSnapshot()
 
         val result = MediatorLiveData<BlinkersStatus>()
 
