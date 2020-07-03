@@ -31,11 +31,16 @@ class ControllerViewModel(
             blinkersRepository.saveEmotionSnapshot(
                 EmotionalSnapshot(
                     timestamp = System.currentTimeMillis(),
-                    arousal = arousal.value ?: -1,
-                    dominance = dominance.value ?: -1,
-                    valence = valence.value ?: -1
+                    arousal = arousal.value ?: 0,
+                    dominance = dominance.value ?: 0,
+                    valence = valence.value ?: 0
                 ))
         }
+    }
+
+    suspend fun getAnalysis(): List<Analysis>? {
+        val result = blinkersRepository.getAnalysisFrom(0)
+        return (result as? Result.Success)?.data
     }
 
     suspend fun getDeviceData(): List<DeviceState>? {

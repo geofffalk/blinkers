@@ -1,9 +1,12 @@
 package app.blinkers.data.source
 
-import androidx.lifecycle.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.Observer
 import app.blinkers.data.*
 import kotlinx.coroutines.*
-import timber.log.Timber
+import java.util.*
+import kotlin.math.sqrt
 
 class DefaultBlinkersRepository(
     private val deviceCommunicator: DeviceCommunicator,
@@ -11,12 +14,20 @@ class DefaultBlinkersRepository(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : BlinkersRepository {
 
-    private var lastEmotionalSnapshot : EmotionalSnapshot? = null;
+    private val maxSizeOfCache = 5
+    private val lifetimeOfEEGSnapshotsInMillis = 3000L
+    private val eegRatioPrecision = 1000000
+    private val eegSnapshotCache = object: LinkedHashMap<Long, EEGSnapshot>() {
+        override fun removeEldestEntry(eldest: Map.Entry<Long, EEGSnapshot>?): Boolean {
+            return size >= maxSizeOfCache
+        }
+    }
 
         init {
             val blinkerObserver = Observer<Result<DeviceState>> { blinkerState ->
                 blinkerState?.let {
-                    if (it is Result.Success) {
+                    if (it is Result.Success && it.data.eegSnapshot != null) {
+                        eegSnapshotCache[it.data.timestamp] = it.data.eegSnapshot
                         GlobalScope.launch(ioDispatcher) {
                             localDataSource.saveDeviceState(it.data)
                         }
@@ -78,9 +89,14 @@ class DefaultBlinkersRepository(
         deviceCommunicator.updateLed(isOn)
     }
 
-    override suspend fun saveEmotionSnapshot(snapshot: EmotionalSnapshot) {
-        lastEmotionalSnapshot = snapshot;
-        localDataSource.saveEmotionalSnapshot(snapshot)
+    override suspend fun saveEmotionSnapshot(emo: EmotionalSnapshot) {
+        val currentTime = System.currentTimeMillis()
+        val analysis = eegSnapshotCache.filter { currentTime - it.key < lifetimeOfEEGSnapshotsInMillis  }
+            .map { Analysis(it.key, emo.valence, emo.arousal, emo.dominance, it.value.normalised(eegRatioPrecision)) }
+        analysis.forEach {
+            localDataSource.saveAnalysis(it)
+        }
+        localDataSource.saveEmotionalSnapshot(emo)
     }
 
     override suspend fun getDeviceStatesFrom(timestamp: Long): Result<List<DeviceState>> {
@@ -89,6 +105,10 @@ class DefaultBlinkersRepository(
 
     override suspend fun getEmotionalStatesFrom(timestamp: Long): Result<List<EmotionalSnapshot>> {
         return localDataSource.getEmotionalSnapshotsFrom(timestamp)
+    }
+
+    override suspend fun getAnalysisFrom(timestamp: Long): Result<List<Analysis>> {
+        return localDataSource.getAnalysisFrom(timestamp)
     }
 
 }

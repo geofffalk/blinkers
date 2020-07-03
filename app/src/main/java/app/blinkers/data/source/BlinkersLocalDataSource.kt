@@ -2,6 +2,7 @@ package app.blinkers.data.source
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
+import app.blinkers.data.Analysis
 import app.blinkers.data.DeviceState
 import app.blinkers.data.EmotionalSnapshot
 import app.blinkers.data.Result
@@ -52,6 +53,18 @@ class BlinkersLocalDataSource internal constructor(
     override suspend fun getEmotionalSnapshotsFrom(timestamp: Long): Result<List<EmotionalSnapshot>> = withContext(ioDispatcher) {
         return@withContext try {
             Success(blinkerDao.getEmotionalSnapshotsFrom(timestamp))
+        } catch (e: Exception) {
+            Error(e)
+        }
+    }
+
+    override suspend fun saveAnalysis(analysis: Analysis) {
+        blinkerDao.insertAnalysis(analysis)
+    }
+
+    override suspend fun getAnalysisFrom(timestamp: Long): Result<List<Analysis>> = withContext(ioDispatcher) {
+        return@withContext try {
+            Success(blinkerDao.getAnalysisFrom(timestamp))
         } catch (e: Exception) {
             Error(e)
         }

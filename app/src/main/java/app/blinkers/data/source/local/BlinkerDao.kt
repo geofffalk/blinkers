@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import app.blinkers.data.DeviceState
+import app.blinkers.data.Analysis
 import app.blinkers.data.EmotionalSnapshot
 
 @Dao
@@ -26,10 +27,16 @@ interface BlinkerDao {
     @Query("SELECT * from EmotionalSnapshot WHERE timestamp > :timestamp")
     suspend fun getEmotionalSnapshotsFrom(timestamp: Long): List<EmotionalSnapshot>
 
+    @Query("SELECT * from Analysis WHERE timestamp > :timestamp")
+    suspend fun getAnalysisFrom(timestamp: Long): List<Analysis>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDeviceState(deviceState: DeviceState)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEmotionalSnapshot(emotionalSnapshot: EmotionalSnapshot)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAnalysis(analysis: Analysis)
 
 }

@@ -90,4 +90,5 @@ dependencies {
     implementation "androidx.navigation:navigation-ui-ktx:$navigationVersion"
 
     implementation "com.github.doyaaaaaken:kotlin-csv-jvm:0.10.4"
+    implementation "org.apache.commons:commons-math3:3.6.1"
 }

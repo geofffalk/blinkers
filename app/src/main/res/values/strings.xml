@@ -13,4 +13,5 @@
     <string name="commit">Commit</string>
     <string name="export_device_data">Export device data</string>
     <string name="export_emotional_snapshots">Export emotional snapshots</string>
+    <string name="export_analysis">Export analysis</string>
 </resources>

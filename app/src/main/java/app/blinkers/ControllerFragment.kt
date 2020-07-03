@@ -11,6 +11,7 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
+import app.blinkers.data.Analysis
 import app.blinkers.data.source.DefaultDeviceCommunicator
 import app.blinkers.databinding.ControllerFragBinding
 import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
@@ -18,9 +19,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.apache.commons.math3.linear.BlockRealMatrix
+import org.apache.commons.math3.linear.RealMatrix
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.*
 import kotlin.coroutines.CoroutineContext
 
 class ControllerFragment : Fragment(), CoroutineScope {
@@ -77,6 +79,10 @@ class ControllerFragment : Fragment(), CoroutineScope {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.export_analysis -> {
+                exportAnalysisToCSVFile()
+                true
+            }
             R.id.export_device_data -> {
                 exportEEGDatabaseToCSVFile()
                 true
@@ -86,6 +92,91 @@ class ControllerFragment : Fragment(), CoroutineScope {
                 true
             }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun exportAnalysisToCSVFile() {
+        launch {
+            val csvFile = File(context?.filesDir, "analysis_data.csv")
+            csvFile.createNewFile()
+            val analysis =
+                withContext(Dispatchers.IO) { viewModel.getAnalysis() }
+
+            analysis?.let {
+
+                val analysisMatrix: RealMatrix = analysis.toRealMatrix()
+
+                csvWriter().open(csvFile, append = false) {
+                    writeRow(
+                        listOf(
+                            "Date",
+                            "Timestamp",
+                            "Valence",
+                            "Arousal",
+                            "Dominance",
+                            "Signal strength",
+                            "Delta",
+                            "Theta",
+                            "lowAlpha",
+                            "highAlpha",
+                            "lowBeta",
+                            "highBeta",
+                            "lowGamma",
+                            "highGamma"
+                        )
+                    )
+
+                    analysisMatrix.data.iterator().forEach {
+                        writeRow(listOf(
+                            format("EEE, d MMM HH:mm:ss", it[0].toLong()), it[0].toLong(), it[1], it[2], it[3], it[4], it[5], it[6], it[7], it[8], it[9], it[10], it[11], it[12]))
+                    }
+
+                    val pearsons = PearsonsCorrelation(analysisMatrix)
+                    val correlations = (5..12).map {
+                        pearsons.correlation(analysisMatrix.getColumn(1), analysisMatrix.getColumn(it))
+                    }
+
+                    writeRow(emptyList())
+                    writeRow("Stats analysis")
+                    writeRow(emptyList())
+                    writeRow(
+                        listOf(
+                            "",
+                            "",
+                            "",
+                            "",
+                            "",
+                            "Valence Correlations: ",
+                            correlations[0],
+                            correlations[1],
+                            correlations[2],
+                            correlations[3],
+                            correlations[4],
+                            correlations[5],
+                            correlations[6],
+                            correlations[7]
+                        )
+                    )
+                    writeRow(emptyList())
+                    writeRow("CORRELATION MATRIX")
+                    writeRow(emptyList())
+
+                    pearsons.correlationMatrix.data.forEach {
+                        writeRow(it.toList())
+                    }
+
+                    writeRow(emptyList())
+                    writeRow("CORRELATION P VALUES")
+                    writeRow(emptyList())
+
+                    pearsons.correlationPValues.data.forEach {
+                        writeRow(it.toList())
+                    }
+
+                }
+                val intent = goToFileIntent(requireContext(), csvFile)
+                startActivity(intent)
+            }
         }
     }
 
@@ -172,6 +263,17 @@ class ControllerFragment : Fragment(), CoroutineScope {
             btSocket = null
         }
     }
+}
+
+private fun List<Analysis>.toRealMatrix(): RealMatrix {
+    val matrix = mutableListOf<DoubleArray>()
+    if (isEmpty()) return BlockRealMatrix(0, 0)
+
+    for (index in indices) {
+        matrix.add(this[index].toDoubleArray())
+    }
+
+    return BlockRealMatrix(matrix.toTypedArray())
 }
 
 fun Fragment.getViewModelFactory(): ViewModelFactory {

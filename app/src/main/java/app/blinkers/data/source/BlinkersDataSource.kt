@@ -1,6 +1,7 @@
 package app.blinkers.data.source
 
 import androidx.lifecycle.LiveData
+import app.blinkers.data.Analysis
 import app.blinkers.data.DeviceState
 import app.blinkers.data.EmotionalSnapshot
 import app.blinkers.data.Result
@@ -20,4 +21,8 @@ interface BlinkersDataSource {
     suspend fun saveEmotionalSnapshot(emotionalSnapshot: EmotionalSnapshot)
 
     suspend fun getEmotionalSnapshotsFrom(timestamp: Long): Result<List<EmotionalSnapshot>>
+
+    suspend fun saveAnalysis(analysis: Analysis)
+
+    suspend fun getAnalysisFrom(timestamp: Long): Result<List<Analysis>>
 }
