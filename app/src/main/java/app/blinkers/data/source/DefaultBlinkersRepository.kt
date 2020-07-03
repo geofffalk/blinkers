@@ -11,13 +11,12 @@ class DefaultBlinkersRepository(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : BlinkersRepository {
 
-    private var isRecordingDeviceState = false
     private var lastEmotionalSnapshot : EmotionalSnapshot? = null;
 
         init {
             val blinkerObserver = Observer<Result<DeviceState>> { blinkerState ->
                 blinkerState?.let {
-                    if (isRecordingDeviceState && it is Result.Success) {
+                    if (it is Result.Success) {
                         GlobalScope.launch(ioDispatcher) {
                             localDataSource.saveDeviceState(it.data)
                         }
@@ -72,11 +71,7 @@ class DefaultBlinkersRepository(
         }
 
 
-        return BlinkersStatus(isConnected, isRecordingDeviceState, isLedOn, latestEmotionalSnapshot, latestEEGSnapshot, errorMessage)
-    }
-
-    override fun recordDeviceState(doRecord: Boolean) {
-        isRecordingDeviceState = doRecord
+        return BlinkersStatus(isConnected, isLedOn, latestEmotionalSnapshot, latestEEGSnapshot, errorMessage)
     }
 
     override suspend fun setLedState(isOn: Boolean) {

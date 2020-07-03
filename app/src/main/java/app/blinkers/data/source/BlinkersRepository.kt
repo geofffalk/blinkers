@@ -10,8 +10,6 @@ interface BlinkersRepository {
 
     fun observeBlinkersStatus(): LiveData<BlinkersStatus>
 
-    fun recordDeviceState(doRecord: Boolean)
-
     suspend fun setLedState(isOn: Boolean)
 
     suspend fun saveEmotionSnapshot(emotionalSnapshot: EmotionalSnapshot)

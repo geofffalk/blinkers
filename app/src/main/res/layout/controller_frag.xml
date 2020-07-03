@@ -32,15 +32,6 @@
             android:layout_margin="10dp">
 
             <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/eegRecording"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_marginBottom="10dp"
-                android:checked="@{viewmodel.isRecording}"
-                android:onClick="@{(view) -> viewmodel.recordDeviceState(((CompoundButton)view).isChecked())}"
-                android:text="RECORD EEG"  />
-
-            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/ledSwitch"
                 android:layout_width="wrap_content"
                 android:layout_height="50dp"

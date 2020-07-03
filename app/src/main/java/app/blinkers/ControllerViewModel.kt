@@ -18,10 +18,6 @@ class ControllerViewModel(
         blinkersStatus.toString()
     }
 
-   val isRecording: LiveData<Boolean> = blinkersRepository.observeBlinkersStatus().map {
-       it.isRecording
-   }
-
     val ledIsOn: LiveData<Boolean> = blinkersRepository.observeBlinkersStatus().map { blinkersStatus ->
         blinkersStatus.isLedOn
     }
@@ -40,10 +36,6 @@ class ControllerViewModel(
                     valence = valence.value ?: -1
                 ))
         }
-    }
-
-    fun recordDeviceState(doRecord: Boolean) {
-            blinkersRepository.recordDeviceState(doRecord)
     }
 
     suspend fun getDeviceData(): List<DeviceState>? {

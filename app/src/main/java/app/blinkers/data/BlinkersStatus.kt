@@ -1,7 +1,6 @@
 package app.blinkers.data
 
 data class BlinkersStatus(val isConnected: Boolean,
-                          val isRecording: Boolean,
                           val isLedOn: Boolean,
                           val latestEmotionalSnapshot: EmotionalSnapshot?,
                           val latestEEGSnapshot: EEGSnapshot?,
@@ -9,6 +8,6 @@ data class BlinkersStatus(val isConnected: Boolean,
 
     override fun toString(): String {
         val errorMess = errorMessage ?: ""
-        return "Connected: $isConnected - Recording: $isRecording - Led is ON: $isLedOn \n $errorMess\n $latestEmotionalSnapshot \n $latestEEGSnapshot"
+        return "Connected: $isConnected - Led is ON: $isLedOn \n $errorMess\n $latestEmotionalSnapshot \n $latestEEGSnapshot"
     }
 }
