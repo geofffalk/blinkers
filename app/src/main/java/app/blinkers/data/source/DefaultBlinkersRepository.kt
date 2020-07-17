@@ -6,7 +6,6 @@ import androidx.lifecycle.Observer
 import app.blinkers.data.*
 import kotlinx.coroutines.*
 import java.util.*
-import kotlin.math.sqrt
 
 class DefaultBlinkersRepository(
     private val deviceCommunicator: DeviceCommunicator,
@@ -85,10 +84,6 @@ class DefaultBlinkersRepository(
         return BlinkersStatus(isConnected, isLedOn, latestEmotionalSnapshot, latestEEGSnapshot, errorMessage)
     }
 
-    override suspend fun setLedState(isOn: Boolean) {
-        deviceCommunicator.updateLed(isOn)
-    }
-
     override suspend fun saveEmotionSnapshot(emo: EmotionalSnapshot) {
         val currentTime = System.currentTimeMillis()
         val analysis = eegSnapshotCache.filter { currentTime - it.key < lifetimeOfEEGSnapshotsInMillis  }
@@ -109,6 +104,16 @@ class DefaultBlinkersRepository(
 
     override suspend fun getAnalysisFrom(timestamp: Long): Result<List<Analysis>> {
         return localDataSource.getAnalysisFrom(timestamp)
+    }
+
+    override suspend fun setPhaseTime(phase: Int, seconds: Int) {
+        if (phase in 0..3)
+        deviceCommunicator.setPhaseTime(phase, seconds);
+    }
+
+    override suspend fun setSpeed(speed: Int) {
+        if (speed in 0..2)
+        deviceCommunicator.setSpeed(speed)
     }
 
 }

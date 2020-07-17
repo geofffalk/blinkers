@@ -15,6 +15,7 @@ import app.blinkers.data.Analysis
 import app.blinkers.data.source.DefaultDeviceCommunicator
 import app.blinkers.databinding.ControllerFragBinding
 import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
+import kotlinx.android.synthetic.main.controller_frag.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,6 +23,7 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.math3.linear.BlockRealMatrix
 import org.apache.commons.math3.linear.RealMatrix
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
+import timber.log.Timber
 import java.io.File
 import kotlin.coroutines.CoroutineContext
 
@@ -63,6 +65,43 @@ class ControllerFragment : Fragment(), CoroutineScope {
         }
 
         viewDataBinding.root.keepScreenOn = true
+
+         arrayOf(
+            viewDataBinding.root.phase0picker,
+            viewDataBinding.root.phase1picker,
+            viewDataBinding.root.phase2picker,
+            viewDataBinding.root.phase3picker
+        ).forEach {
+             it.maxValue = 6
+             it.minValue = 0
+             it.displayedValues = (0..60 step 10).toList().map { num -> "$num s" }.toTypedArray()
+             it.value = 3;
+         }
+
+        with(viewDataBinding.root.repeatPicker) {
+            maxValue = 59
+            minValue = 0
+            displayedValues = (0..59).toMutableList().map { num -> if (num == 0) "NONE" else if (num == 1) "1 min" else "$num mins"}.toTypedArray()
+            value = 0
+        }
+
+//
+//        viewDataBinding.root.phase0picker.minValue = 0
+//        viewDataBinding.root.phase0picker.maxValue = 60
+//        viewDataBinding.root.phase0picker.value = 30
+//
+//        viewDataBinding.root.phase1picker.minValue = 0
+//        viewDataBinding.root.phase1picker.maxValue = 60
+//        viewDataBinding.root.phase1picker.value = 30
+//
+//        viewDataBinding.root.phase2picker.minValue = 0
+//        viewDataBinding.root.phase2picker.maxValue = 60
+//        viewDataBinding.root.phase2picker.value = 30
+//
+//        viewDataBinding.root.phase3picker.minValue = 0
+//        viewDataBinding.root.phase3picker.maxValue = 60
+//        viewDataBinding.root.phase3picker.value = 30
+//
 
         return viewDataBinding.root
     }

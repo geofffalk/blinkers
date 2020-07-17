@@ -18,12 +18,12 @@ class ControllerViewModel(
         blinkersStatus.toString()
     }
 
-    val ledIsOn: LiveData<Boolean> = blinkersRepository.observeBlinkersStatus().map { blinkersStatus ->
-        blinkersStatus.isLedOn
+    fun setPhaseTime(phase: Int, seconds: Int) = viewModelScope.launch {
+        blinkersRepository.setPhaseTime(phase, seconds)
     }
 
-    fun switchLed(isOn: Boolean) = viewModelScope.launch {
-        blinkersRepository.setLedState(isOn)
+    fun setSpeed(speed: Int) = viewModelScope.launch {
+        blinkersRepository.setSpeed(speed)
     }
 
     fun saveEmotionalSnapshot() {

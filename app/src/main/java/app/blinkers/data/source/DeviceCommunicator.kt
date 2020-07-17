@@ -21,6 +21,8 @@ interface DeviceCommunicator {
     fun disconnect()
     suspend fun updateLed(isOn: Boolean)
     fun observeLatestDeviceState(): LiveData<Result<DeviceState>>
+    fun setPhaseTime(phase: Int, seconds: Int)
+    fun setSpeed(speed: Int)
 }
 
 object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
@@ -161,4 +163,12 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
     }
 
     override fun observeLatestDeviceState(): LiveData<Result<DeviceState>> = currentDeviceState
+
+    override fun setPhaseTime(phase: Int, seconds: Int) {
+        socket.outputStream.write(phase.toString().toByteArray())
+    }
+
+    override fun setSpeed(speed: Int) {
+        socket.outputStream.write(arrayOf("s", "m", "f")[speed].toByteArray())
+    }
 }
