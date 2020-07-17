@@ -116,4 +116,14 @@ class DefaultBlinkersRepository(
         deviceCommunicator.setSpeed(speed)
     }
 
+    override fun startProgram(
+        phase0Seconds: Int,
+        phase1Seconds: Int,
+        phase2Seconds: Int,
+        phase3Seconds: Int,
+        repeatMinutes: Int
+    ) {
+        deviceCommunicator.startProgram(phase0Seconds * 1000, phase1Seconds * 1000, phase2Seconds * 1000, phase3Seconds * 1000, repeatMinutes * 60 * 1000L)
+    }
+
 }

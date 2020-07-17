@@ -1,6 +1,7 @@
 package app.blinkers.data.source
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import app.blinkers.data.*
 
 interface BlinkersRepository {
@@ -18,4 +19,6 @@ interface BlinkersRepository {
     suspend fun setPhaseTime(phase: Int, seconds: Int)
 
     suspend fun setSpeed(speed: Int)
+
+    fun startProgram(phase0Seconds: Int, phase1Seconds: Int, phase2Seconds: Int, phase3Seconds: Int, repeatMinutes: Int)
 }

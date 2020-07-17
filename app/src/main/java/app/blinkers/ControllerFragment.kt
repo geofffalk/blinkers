@@ -75,33 +75,13 @@ class ControllerFragment : Fragment(), CoroutineScope {
              it.maxValue = 6
              it.minValue = 0
              it.displayedValues = (0..60 step 10).toList().map { num -> "$num s" }.toTypedArray()
-             it.value = 3;
          }
 
         with(viewDataBinding.root.repeatPicker) {
             maxValue = 59
             minValue = 0
-            displayedValues = (0..59).toMutableList().map { num -> if (num == 0) "NONE" else if (num == 1) "1 min" else "$num mins"}.toTypedArray()
-            value = 0
+            displayedValues = (0..59).toMutableList().map { num -> if (num == 0) "NO REPEAT" else if (num == 1) "1 min" else "$num mins"}.toTypedArray()
         }
-
-//
-//        viewDataBinding.root.phase0picker.minValue = 0
-//        viewDataBinding.root.phase0picker.maxValue = 60
-//        viewDataBinding.root.phase0picker.value = 30
-//
-//        viewDataBinding.root.phase1picker.minValue = 0
-//        viewDataBinding.root.phase1picker.maxValue = 60
-//        viewDataBinding.root.phase1picker.value = 30
-//
-//        viewDataBinding.root.phase2picker.minValue = 0
-//        viewDataBinding.root.phase2picker.maxValue = 60
-//        viewDataBinding.root.phase2picker.value = 30
-//
-//        viewDataBinding.root.phase3picker.minValue = 0
-//        viewDataBinding.root.phase3picker.maxValue = 60
-//        viewDataBinding.root.phase3picker.value = 30
-//
 
         return viewDataBinding.root
     }

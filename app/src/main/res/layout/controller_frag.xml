@@ -74,12 +74,6 @@
                 android:textSize="20dp"
                 android:text="4"/>
 
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="0dp" />
-
         </LinearLayout>
 
             <LinearLayout
@@ -95,7 +89,7 @@
                     android:padding="5dp"
                     android:gravity="center"
                     android:textColor="@color/colorPrimary"
-                    android:textSize="14dp"
+                    android:textSize="18dp"
                     android:text="Sync"/>
 
                 <TextView
@@ -105,7 +99,7 @@
                     android:padding="5dp"
                     android:gravity="center"
                     android:textColor="@color/colorPrimary"
-                    android:textSize="14dp"
+                    android:textSize="18dp"
                     android:text="Integrate"/>
 
                 <TextView
@@ -115,7 +109,7 @@
                     android:textColor="@color/colorPrimary"
                     android:padding="5dp"
                     android:gravity="center"
-                    android:textSize="14dp"
+                    android:textSize="18dp"
                     android:text="Expand"/>
 
 
@@ -126,19 +120,8 @@
                     android:textColor="@color/colorPrimary"
                     android:padding="5dp"
                     android:gravity="center"
-                    android:textSize="14dp"
+                    android:textSize="18dp"
                     android:text="Open"/>
-
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/colorPrimary"
-                    android:padding="5dp"
-                    android:gravity="center"
-                    android:textSize="14dp"
-                    android:text="Repeat every"/>
 
             </LinearLayout>
 
@@ -153,31 +136,80 @@
                     android:id="@+id/phase0picker"
                     android:layout_weight="1"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:value="@={viewmodel.phase0Seconds / 10}" />
 
                 <NumberPicker
                     android:id="@+id/phase1picker"
                     android:layout_weight="1"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:value="@={viewmodel.phase1Seconds / 10}" />
 
                 <NumberPicker
                     android:id="@+id/phase2picker"
                     android:layout_weight="1"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                android:value="@={viewmodel.phase2Seconds / 10}" />
 
                 <NumberPicker
                     android:id="@+id/phase3picker"
                     android:layout_weight="1"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:value="@={viewmodel.phase3Seconds / 10}" />
 
-                <NumberPicker
-                    android:id="@+id/repeatPicker"
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center">
+
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:textColor="@color/colorPrimary"
+                android:padding="5dp"
+                android:gravity="center"
+                android:textSize="14dp"
+                android:text="Repeat every"/>
+
+
+            <NumberPicker
+                android:id="@+id/repeatPicker"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:value="@={viewmodel.repeatMinutes}"/>
+
+                <Space
                     android:layout_weight="1"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="0dp" />
+
+        </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="10dp">
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/colorAccent"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:textColor="#ffffff"
+                    android:layout_marginEnd="10dp"
+                    android:text="START"
+                    android:onClick="@{() -> viewmodel.startProgram()}"/>
 
             </LinearLayout>
 
@@ -185,28 +217,31 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
+                android:gravity="center"
                 android:layout_marginTop="10dp">
 
                 <androidx.appcompat.widget.AppCompatButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#ff0000"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:textColor="#ffffff"
                     android:layout_marginEnd="10dp"
-                    android:onClick="@{() -> viewmodel.setSpeed(0)}"
-                    android:text="SLOW"/>
+                    android:text="DE-STRESS (1 min)"
+                    android:onClick="@{() -> viewmodel.startDestressProgram()}"/>
+
 
                 <androidx.appcompat.widget.AppCompatButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#4499FF"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:textColor="#ffffff"
                     android:layout_marginEnd="10dp"
-                    android:onClick="@{() -> viewmodel.setSpeed(1)}"
-                    android:text="MEDIUM"/>
-
-                <androidx.appcompat.widget.AppCompatButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_marginEnd="10dp"
-                    android:onClick="@{() -> viewmodel.setSpeed(2)}"
-                    android:text="FAST"/>
+                    android:text="CHILLAX (1 min)"
+                    android:onClick="@{() -> viewmodel.startChillaxProgram()}"/>
 
             </LinearLayout>
 

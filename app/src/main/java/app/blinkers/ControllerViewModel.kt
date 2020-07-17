@@ -13,17 +13,37 @@ class ControllerViewModel(
     val dominance = MutableLiveData<Int>()
     val valence = MutableLiveData<Int>()
     val arousal = MutableLiveData<Int>()
+    val phase0Seconds = MutableLiveData<Int>()
+    val phase1Seconds = MutableLiveData<Int>()
+    val phase2Seconds = MutableLiveData<Int>()
+    val phase3Seconds = MutableLiveData<Int>()
+    val repeatMinutes = MutableLiveData<Int>()
+
+    init {
+        phase0Seconds.postValue(30)
+        phase1Seconds.postValue(30)
+        phase2Seconds.postValue(30)
+        phase3Seconds.postValue(30)
+        repeatMinutes.postValue(25)
+
+        // TODO save settings in database when updated
+    }
 
     val statusText: LiveData<String> = blinkersRepository.observeBlinkersStatus().map { blinkersStatus ->
         blinkersStatus.toString()
     }
 
-    fun setPhaseTime(phase: Int, seconds: Int) = viewModelScope.launch {
-        blinkersRepository.setPhaseTime(phase, seconds)
+    fun startProgram() {
+        // TODO move all this to repo
+        blinkersRepository.startProgram(phase0Seconds.value!!, phase1Seconds.value!!, phase2Seconds.value!!, phase3Seconds.value!!, repeatMinutes.value!!)
     }
 
-    fun setSpeed(speed: Int) = viewModelScope.launch {
-        blinkersRepository.setSpeed(speed)
+    fun startDestressProgram() {
+        blinkersRepository.startProgram(30, 30, 0, 0, 0)
+    }
+
+    fun startChillaxProgram() {
+        blinkersRepository.startProgram(0, 0, 30, 30, 0)
     }
 
     fun saveEmotionalSnapshot() {

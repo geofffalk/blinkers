@@ -23,6 +23,7 @@ interface DeviceCommunicator {
     fun observeLatestDeviceState(): LiveData<Result<DeviceState>>
     fun setPhaseTime(phase: Int, seconds: Int)
     fun setSpeed(speed: Int)
+    fun startProgram(phase0Millis: Int, phase1Millis: Int, phase2Millis: Int, phase3Millis: Int, repeatMillis: Long)
 }
 
 object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
@@ -170,5 +171,19 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
 
     override fun setSpeed(speed: Int) {
         socket.outputStream.write(arrayOf("s", "m", "f")[speed].toByteArray())
+    }
+
+    override fun startProgram(
+        p0Millis: Int,
+        p1Millis: Int,
+        p2Millis: Int,
+        p3Millis: Int,
+        rMillis: Long
+    ) {
+        try {
+            socket.outputStream.write("${p0Millis},${p1Millis},${p2Millis},${p3Millis},${rMillis}*".toByteArray())
+        } catch (exception: IOException) {
+            Timber.d("Comms failure");
+        }
     }
 }
