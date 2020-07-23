@@ -184,7 +184,7 @@
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:value="@={viewmodel.repeatMinutes}"/>
+                android:value="@={viewmodel.repeatMinutes / 1}"/>
 
                 <Space
                     android:layout_weight="1"

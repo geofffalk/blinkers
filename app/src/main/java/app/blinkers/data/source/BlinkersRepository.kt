@@ -20,5 +20,5 @@ interface BlinkersRepository {
 
     suspend fun setSpeed(speed: Int)
 
-    fun startProgram(phase0Seconds: Int, phase1Seconds: Int, phase2Seconds: Int, phase3Seconds: Int, repeatMinutes: Int)
+    fun startProgram(phase0Seconds: Short, phase1Seconds: Short, phase2Seconds: Short, phase3Seconds: Short, repeatMinutes: Short)
 }

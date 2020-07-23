@@ -117,13 +117,13 @@ class DefaultBlinkersRepository(
     }
 
     override fun startProgram(
-        phase0Seconds: Int,
-        phase1Seconds: Int,
-        phase2Seconds: Int,
-        phase3Seconds: Int,
-        repeatMinutes: Int
+        phase0Seconds: Short,
+        phase1Seconds: Short,
+        phase2Seconds: Short,
+        phase3Seconds: Short,
+        repeatMinutes: Short
     ) {
-        deviceCommunicator.startProgram(phase0Seconds * 1000, phase1Seconds * 1000, phase2Seconds * 1000, phase3Seconds * 1000, repeatMinutes * 60 * 1000L)
+        deviceCommunicator.startProgram(phase0Seconds.toByte(), phase1Seconds.toByte(), phase2Seconds.toByte(), phase3Seconds.toByte(), repeatMinutes.toByte())
     }
 
 }

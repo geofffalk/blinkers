@@ -14,4 +14,7 @@
     <string name="export_device_data">Export device data</string>
     <string name="export_emotional_snapshots">Export emotional snapshots</string>
     <string name="export_analysis">Export analysis</string>
+    <string name="location_permission_denied">Location permission denied</string>
+    <string name="permission_required_toast">Location permission required</string>
+    <string name="permission_rationale_location">We need your location for bluetooth to work</string>
 </resources>

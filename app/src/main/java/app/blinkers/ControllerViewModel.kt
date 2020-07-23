@@ -35,7 +35,7 @@ class ControllerViewModel(
 
     fun startProgram() {
         // TODO move all this to repo
-        blinkersRepository.startProgram(phase0Seconds.value!!, phase1Seconds.value!!, phase2Seconds.value!!, phase3Seconds.value!!, repeatMinutes.value!!)
+        blinkersRepository.startProgram(phase0Seconds.value!!.toShort(), phase1Seconds.value!!.toShort(), phase2Seconds.value!!.toShort(), phase3Seconds.value!!.toShort(), repeatMinutes.value!!.toShort())
     }
 
     fun startDestressProgram() {

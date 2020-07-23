@@ -1,27 +1,52 @@
 package app.blinkers
 
+import android.Manifest
+import android.app.Activity
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothAdapter.LeScanCallback
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.le.BluetoothLeScanner
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Handler
 import android.provider.Settings
 import android.view.*
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.ListFragment
 import androidx.navigation.fragment.findNavController
+import timber.log.Timber
 import java.util.*
 
 class DevicesFragment: ListFragment() {
 
+    companion object {
+        /**
+         * Request code for location permission request.
+         *
+         * @see .onRequestPermissionsResult
+         */
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+    }
+
     private var bluetoothAdapter: BluetoothAdapter? = null
     private val listItems = ArrayList<BluetoothDevice>()
-    private var listAdapter: ArrayAdapter<BluetoothDevice>? = null
+    private lateinit var listAdapter: ArrayAdapter<BluetoothDevice>
+    private var isScanning = false
+    private lateinit var handler: Handler
+
+    private val REQUEST_ENABLE_BT = 1
+
+    // Stops scanning after 10 seconds.
+    private val SCAN_PERIOD: Long = 20000
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handler = Handler()
         setHasOptionsMenu(true)
         if (requireActivity().packageManager
                 .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
@@ -54,6 +79,36 @@ class DevicesFragment: ListFragment() {
         setEmptyText("initializing...")
         (listView.emptyView as TextView).textSize = 18f
         setListAdapter(listAdapter)
+
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED) {
+            // Permissio n to access the location is missing. Show rationale and request permission
+            PermissionUtils.requestPermission(
+                requireActivity() as AppCompatActivity, LOCATION_PERMISSION_REQUEST_CODE,
+                Manifest.permission.ACCESS_FINE_LOCATION, true
+            )
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != LOCATION_PERMISSION_REQUEST_CODE) {
+            return
+        }
+        if (PermissionUtils.isPermissionGranted(
+                permissions,
+                grantResults,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+        ) {
+            refresh()
+        } else {
+            // Permission was denied. Display an error message
+            // [START_EXCLUDE]
+            // Display the missing permission error dialog when the fragments resume.
+            // permissionDenied = true
+            // [END_EXCLUDE]
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -63,11 +118,47 @@ class DevicesFragment: ListFragment() {
 
     override fun onResume() {
         super.onResume()
-        if (bluetoothAdapter == null) setEmptyText("<bluetooth not supported>") else if (!bluetoothAdapter!!.isEnabled) setEmptyText(
-            "<bluetooth is disabled>"
-        ) else setEmptyText("<no bluetooth devices found>")
+        if (bluetoothAdapter == null) setEmptyText("<bluetooth not supported>") else if (!bluetoothAdapter!!.isEnabled) { setEmptyText(
+            "<bluetooth is disabled>")
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            startActivityForResult(
+                enableBtIntent,
+                REQUEST_ENABLE_BT
+            )} else setEmptyText("<no bluetooth devices found>")
         refresh()
     }
+
+    override fun onPause() {
+        super.onPause()
+        scanLeDevice(false)
+        listAdapter.clear()
+    }
+
+    private fun scanLeDevice(enable: Boolean) {
+
+        if (enable) {
+            // Stops scanning after a pre-defined scan period.
+            handler.postDelayed({
+                isScanning = false
+                bluetoothAdapter?.stopLeScan(mLeScanCallback)
+            }, SCAN_PERIOD)
+            isScanning = true
+            bluetoothAdapter?.startLeScan(mLeScanCallback)
+        } else {
+            isScanning = false
+            bluetoothAdapter?.stopLeScan(mLeScanCallback)
+        }
+    }
+
+    // Device scan callback.
+    private val mLeScanCallback =
+        LeScanCallback { device, rssi, scanRecord ->
+            Timber.d("DEVICE FOUND")
+            requireActivity().runOnUiThread(Runnable {
+                listAdapter.add(device)
+                listAdapter.notifyDataSetChanged()
+            })
+        }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
@@ -81,6 +172,19 @@ class DevicesFragment: ListFragment() {
         }
     }
 
+override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
+        // User chose not to enable Bluetooth.
+        if (requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_CANCELED) {
+           // finish()
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
     fun refresh() {
         listItems.clear()
         if (bluetoothAdapter != null) {
@@ -90,12 +194,10 @@ class DevicesFragment: ListFragment() {
         }
         Collections.sort(listItems,
             Comparator { obj: BluetoothDevice, a: BluetoothDevice ->
-                obj.compareTo(
-                    a
-                )
-            }
+                obj.compareTo(a) }
         )
         listAdapter!!.notifyDataSetChanged()
+        scanLeDevice(true)
     }
 
     override fun onListItemClick(l: ListView, v: View, position: Int, id: Long) {

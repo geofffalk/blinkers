@@ -1,12 +1,12 @@
 package app.blinkers
 
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.format.DateFormat.format
 import android.view.*
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -23,7 +23,6 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.math3.linear.BlockRealMatrix
 import org.apache.commons.math3.linear.RealMatrix
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
-import timber.log.Timber
 import java.io.File
 import kotlin.coroutines.CoroutineContext
 
@@ -264,10 +263,15 @@ class ControllerFragment : Fragment(), CoroutineScope {
      */
     private fun connect() {
         try {
-            val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-            val device = bluetoothAdapter.getRemoteDevice(deviceAddress)
+//            val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+//            val device = bluetoothAdapter.getRemoteDevice(deviceAddress)
             connected = Connected.Pending
-            DefaultDeviceCommunicator.connect(this@ControllerFragment.requireContext(), device)
+            deviceAddress?.let  {
+                DefaultDeviceCommunicator.connect(
+                    this@ControllerFragment.requireContext(),
+                    it
+                )
+            }
             connected = Connected.True
         } catch (e: Exception) {
             disconnect()
