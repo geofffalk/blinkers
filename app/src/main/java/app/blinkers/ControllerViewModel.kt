@@ -13,20 +13,16 @@ class ControllerViewModel(
     val dominance = MutableLiveData<Int>()
     val valence = MutableLiveData<Int>()
     val arousal = MutableLiveData<Int>()
-    val phase0Seconds = MutableLiveData<Int>()
-    val phase1Seconds = MutableLiveData<Int>()
-    val phase2Seconds = MutableLiveData<Int>()
-    val phase3Seconds = MutableLiveData<Int>()
-    val repeatMinutes = MutableLiveData<Int>()
+    val startStage = MutableLiveData<Int>()
+    val colorScheme = MutableLiveData<Int>()
+    val phaseTime = MutableLiveData<Int>()
+    val brightness = MutableLiveData<Int>()
 
     init {
-        phase0Seconds.postValue(30)
-        phase1Seconds.postValue(30)
-        phase2Seconds.postValue(30)
-        phase3Seconds.postValue(30)
-        repeatMinutes.postValue(25)
-
-        // TODO save settings in database when updated
+        startStage.postValue(1)
+        phaseTime.postValue(1)
+        brightness.postValue(8)
+        colorScheme.postValue(1)
     }
 
     val statusText: LiveData<String> = blinkersRepository.observeBlinkersStatus().map { blinkersStatus ->
@@ -34,16 +30,12 @@ class ControllerViewModel(
     }
 
     fun startProgram() {
-        // TODO move all this to repo
-        blinkersRepository.startProgram(phase0Seconds.value!!.toShort(), phase1Seconds.value!!.toShort(), phase2Seconds.value!!.toShort(), phase3Seconds.value!!.toShort(), repeatMinutes.value!!.toShort())
+     //   blinkersRepository.setBrightness(brightness.value ?: 8)
+        blinkersRepository.startProgram(startStage.value ?: 1, 8, (phaseTime.value ?: 20) * 10, colorScheme.value ?: 1, brightness.value ?: 8)
     }
 
-    fun startDestressProgram() {
-        blinkersRepository.startProgram(30, 30, 0, 0, 0)
-    }
-
-    fun startChillaxProgram() {
-        blinkersRepository.startProgram(0, 0, 30, 30, 0)
+    fun stopProgram() {
+        blinkersRepository.stopProgram()
     }
 
     fun saveEmotionalSnapshot() {

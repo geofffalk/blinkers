@@ -5,9 +5,11 @@ import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.Observer
 import app.blinkers.data.*
 import kotlinx.coroutines.*
+import timber.log.Timber
 import java.util.*
 
 class DefaultBlinkersRepository(
+
     private val deviceCommunicator: DeviceCommunicator,
     private val localDataSource: BlinkersDataSource,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -16,29 +18,29 @@ class DefaultBlinkersRepository(
     private val maxSizeOfCache = 5
     private val lifetimeOfEEGSnapshotsInMillis = 3000L
     private val eegRatioPrecision = 1000000
-    private val eegSnapshotCache = object: LinkedHashMap<Long, EEGSnapshot>() {
+    private val eegSnapshotCache = object : LinkedHashMap<Long, EEGSnapshot>() {
         override fun removeEldestEntry(eldest: Map.Entry<Long, EEGSnapshot>?): Boolean {
             return size >= maxSizeOfCache
         }
     }
 
-        init {
-            val blinkerObserver = Observer<Result<DeviceState>> { blinkerState ->
-                blinkerState?.let {
-                    if (it is Result.Success && it.data.eegSnapshot != null) {
-                        eegSnapshotCache[it.data.timestamp] = it.data.eegSnapshot
-                        GlobalScope.launch(ioDispatcher) {
-                            localDataSource.saveDeviceState(it.data)
-                        }
+    init {
+        val blinkerObserver = Observer<Result<DeviceState>> { blinkerState ->
+            blinkerState?.let {
+                if (it is Result.Success && it.data.eegSnapshot != null) {
+                    eegSnapshotCache[it.data.timestamp] = it.data.eegSnapshot
+                    GlobalScope.launch(ioDispatcher) {
+                        localDataSource.saveDeviceState(it.data)
                     }
                 }
             }
+        }
 
-            deviceCommunicator.observeLatestDeviceState().observeForever(blinkerObserver)
-            }
+        deviceCommunicator.observeLatestDeviceState().observeForever(blinkerObserver)
+    }
 
 
-    override fun observeBlinkersStatus(): LiveData<BlinkersStatus>  {
+    override fun observeBlinkersStatus(): LiveData<BlinkersStatus> {
         val deviceLiveData = deviceCommunicator.observeLatestDeviceState()
         val emotionLiveData = localDataSource.observeLastEmotionalSnapshot()
 
@@ -77,17 +79,33 @@ class DefaultBlinkersRepository(
         }
 
         (emotionLiveData.value as? Result.Success)?.data?.apply {
-            latestEmotionalSnapshot = EmotionalSnapshot(this.timestamp, this.valence, this.arousal, this.dominance)
+            latestEmotionalSnapshot =
+                EmotionalSnapshot(this.timestamp, this.valence, this.arousal, this.dominance)
         }
 
 
-        return BlinkersStatus(isConnected, isLedOn, latestEmotionalSnapshot, latestEEGSnapshot, errorMessage)
+        return BlinkersStatus(
+            isConnected,
+            isLedOn,
+            latestEmotionalSnapshot,
+            latestEEGSnapshot,
+            errorMessage
+        )
     }
 
     override suspend fun saveEmotionSnapshot(emo: EmotionalSnapshot) {
         val currentTime = System.currentTimeMillis()
-        val analysis = eegSnapshotCache.filter { currentTime - it.key < lifetimeOfEEGSnapshotsInMillis  }
-            .map { Analysis(it.key, emo.valence, emo.arousal, emo.dominance, it.value.normalised(eegRatioPrecision)) }
+        val analysis =
+            eegSnapshotCache.filter { currentTime - it.key < lifetimeOfEEGSnapshotsInMillis }
+                .map {
+                    Analysis(
+                        it.key,
+                        emo.valence,
+                        emo.arousal,
+                        emo.dominance,
+                        it.value.normalised(eegRatioPrecision)
+                    )
+                }
         analysis.forEach {
             localDataSource.saveAnalysis(it)
         }
@@ -107,23 +125,49 @@ class DefaultBlinkersRepository(
     }
 
     override suspend fun setPhaseTime(phase: Int, seconds: Int) {
-        if (phase in 0..3)
+        if (phase in 0..3) {
+        }
         deviceCommunicator.setPhaseTime(phase, seconds);
     }
 
     override suspend fun setSpeed(speed: Int) {
-        if (speed in 0..2)
+        if (speed in 0..2) {
+        }
         deviceCommunicator.setSpeed(speed)
     }
 
-    override fun startProgram(
-        phase0Seconds: Short,
-        phase1Seconds: Short,
-        phase2Seconds: Short,
-        phase3Seconds: Short,
-        repeatMinutes: Short
-    ) {
-        deviceCommunicator.startProgram(phase0Seconds.toByte(), phase1Seconds.toByte(), phase2Seconds.toByte(), phase3Seconds.toByte(), repeatMinutes.toByte())
+    override fun startProgram(startStage: Int, endStage: Int, phaseTime: Int, colorCode: Int, brightness: Int) {
+        when {
+            phaseTime !in 10..600 -> {
+                Timber.d("Phase time must be between 10 and 600")
+            }
+            startStage !in 1..8 -> {
+                Timber.d("Start stage must be between 1 and 8")
+            }
+            startStage > endStage -> {
+                Timber.d("Start stage cannot begin after end stage - program not started")
+            }
+            colorCode !in 1..10 -> {
+                Timber.d("Palette code must be between 1 and 10")
+            }
+            brightness !in 1..10 -> {
+                Timber.d("Invalid brightness level - must be between 1 and 10")
+            }
+            else -> {
+                deviceCommunicator.startProgram(phaseTime, colorCode, startStage, endStage, brightness)
+            }
+        }
+    }
+
+    override fun setBrightness(brightness: Int) {
+        if (brightness !in 1..10) {
+            Timber.d("Invalid brightness level - must be between 1 and 10")
+        } else
+        deviceCommunicator.setBrightness(brightness)
+    }
+
+    override fun stopProgram() {
+        deviceCommunicator.stopProgram()
     }
 
 }

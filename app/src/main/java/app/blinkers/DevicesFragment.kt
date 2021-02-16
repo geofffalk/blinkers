@@ -152,11 +152,20 @@ class DevicesFragment: ListFragment() {
 
     // Device scan callback.
     private val mLeScanCallback =
-        LeScanCallback { device, rssi, scanRecord ->
+        LeScanCallback { device : BluetoothDevice, _, _ ->
             Timber.d("DEVICE FOUND")
             requireActivity().runOnUiThread(Runnable {
-                listAdapter.add(device)
-                listAdapter.notifyDataSetChanged()
+                var deviceAlreadyExists = false
+                for (i in 0 until listAdapter.count) {
+                    if (listAdapter.getItem(i)?.name.equals(device.name)) {
+                        deviceAlreadyExists = true
+                        break
+                    }
+                }
+                if (!deviceAlreadyExists) {
+                    listAdapter.add(device)
+                    listAdapter.notifyDataSetChanged()
+                }
             })
         }
 

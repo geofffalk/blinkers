@@ -25,6 +25,7 @@ import org.apache.commons.math3.linear.RealMatrix
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
 import java.io.File
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.floor
 
 class ControllerFragment : Fragment(), CoroutineScope {
 
@@ -65,21 +66,29 @@ class ControllerFragment : Fragment(), CoroutineScope {
 
         viewDataBinding.root.keepScreenOn = true
 
-         arrayOf(
-            viewDataBinding.root.phase0picker,
-            viewDataBinding.root.phase1picker,
-            viewDataBinding.root.phase2picker,
-            viewDataBinding.root.phase3picker
-        ).forEach {
-             it.maxValue = 6
-             it.minValue = 0
-             it.displayedValues = (0..60 step 10).toList().map { num -> "$num s" }.toTypedArray()
+        with(viewDataBinding.root.startStage) {
+            maxValue = 8
+            minValue = 1
+            displayedValues = (1..8).toMutableList().map { num -> "$num"}.toTypedArray()
+        }
+
+        with(viewDataBinding.root.phaseSeconds) {
+             maxValue = 59
+             minValue = 1
+           displayedValues = (10..600 step 10).toList().map { num -> if (num < 60) "$num secs" else "${floor(num.toDouble() / 60F).toInt()} m ${num % 60}" }.toTypedArray()
+
          }
 
-        with(viewDataBinding.root.repeatPicker) {
-            maxValue = 59
-            minValue = 0
-            displayedValues = (0..59).toMutableList().map { num -> if (num == 0) "NO REPEAT" else if (num == 1) "1 min" else "$num mins"}.toTypedArray()
+        with(viewDataBinding.root.colorScheme) {
+            maxValue = 10
+            minValue = 1
+            displayedValues = (1..10).toList().map { num -> "$num" }.toTypedArray()
+        }
+
+        with(viewDataBinding.root.brightness) {
+            maxValue = 10
+            minValue = 1
+            displayedValues = (1..10).toList().map { num -> "$num" }.toTypedArray()
         }
 
         return viewDataBinding.root

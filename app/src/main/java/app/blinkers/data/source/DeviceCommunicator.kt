@@ -1,8 +1,6 @@
 package app.blinkers.data.source
 
-import android.R.attr.data
 import android.bluetooth.*
-import android.bluetooth.BluetoothGattCharacteristic.FORMAT_UINT8
 import android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -22,8 +20,6 @@ import timber.log.Timber
 import java.io.IOException
 import java.io.UnsupportedEncodingException
 import java.lang.Boolean.TRUE
-import java.nio.ByteBuffer
-import java.nio.IntBuffer
 import java.util.*
 import java.util.concurrent.Executors
 
@@ -36,7 +32,9 @@ interface DeviceCommunicator {
     fun observeLatestDeviceState(): LiveData<Result<DeviceState>>
     fun setPhaseTime(phase: Int, seconds: Int)
     fun setSpeed(speed: Int)
-    fun startProgram(phase0Secs: Byte, phase1Secs: Byte, phase2Secs: Byte, phase3Secs: Byte, repeatMins: Byte)
+    fun setBrightness(brightness: Int)
+    fun startProgram(phaseTimeSeconds: Int, paletteCode: Int, startStage: Int, endStage: Int, brightness: Int)
+    fun stopProgram()
 }
 
 data class GattCharacteristics(val modelNumber: BluetoothGattCharacteristic,
@@ -53,6 +51,10 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
     private lateinit var gattCharacteristics: GattCharacteristics
     private lateinit var activeCharacteristic: BluetoothGattCharacteristic
     private val gattCharacteristicsList = ArrayList<GattCharacteristics>()
+
+    const val START_COMMAND = 200.toByte()
+    const val STOP_COMMAND = 201.toByte()
+
 
     private var isConnected = false
     private var deviceAddress: String? = null
@@ -249,12 +251,82 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
       //  socket.outputStream.write(arrayOf("s", "m", "f")[speed].toByteArray())
     }
 
-    override fun startProgram(phase0Secs: Byte, phase1Secs: Byte, phase2Secs: Byte, phase3Secs: Byte, repeatMins: Byte) {
+    override fun setBrightness(brightness: Int) {
         try {
             if (isConnected) {
-                val byteArray = byteArrayOf(phase0Secs, phase1Secs, phase2Secs, phase3Secs, repeatMins)
+                val brightnessByte = (1.coerceAtLeast(10.coerceAtMost(brightness)) + 50).toByte()
 
-                activeCharacteristic.value = byteArrayOf(phase0Secs, phase1Secs, phase2Secs, phase3Secs, repeatMins)
+                activeCharacteristic.value = byteArrayOf(brightnessByte)
+
+             Timber.d("WRITING TO DEVICE: ${activeCharacteristic.getStringValue(0)}")
+                btGatt?.writeCharacteristic(activeCharacteristic)
+            }
+        } catch (exception: IOException) {
+            Timber.d("Comms failure");
+        }
+    }
+
+    override fun stopProgram() {
+        try {
+            if (isConnected) {
+                activeCharacteristic.value = byteArrayOf(STOP_COMMAND)
+
+                //The character size of TI CC2540 is limited to 17 bytes, otherwise characteristic can not be sent properly,
+                //so String should be cut to comply this restriction. And something should be done here:
+                Timber.d("WRITING TO DEVICE: ${activeCharacteristic.getStringValue(0)}")
+//
+//                //As the communication is asynchronous content string and characteristic should be pushed into an ring buffer for further transmission
+//                ringBuffer.push(
+//                    UglyMutableCharacteristicHolder(
+//                        activeCharacteristic,
+//                        activeCharacteristic.getStringValue(0)
+//                    )
+//                )
+//                Timber.d("mCharacteristicRingBufferlength:" + ringBuffer.size())
+
+//
+//                //The progress of onCharacteristicWrite and writeCharacteristic is almost the same. So callback function is called directly here
+//                //for details see the onCharacteristicWrite function
+                btGatt?.writeCharacteristic(activeCharacteristic)
+
+//                gattCallback.onCharacteristicWrite(
+//                    btGatt,
+//                    activeCharacteristic,
+//                    WRITE_NEW_CHARACTERISTIC
+//                )
+            }
+
+            //     socket.outputStream.write("${p0Millis},${p1Millis},${p2Millis},${p3Millis},${rMillis}*".toByteArray())
+        } catch (exception: IOException) {
+            Timber.d("Comms failure");
+        }
+    }
+
+    override fun startProgram(
+        phaseTimeSeconds: Int,
+        paletteCode: Int,
+        startStage: Int,
+        endStage: Int,
+        brightness: Int
+    ) {
+        try {
+            if (isConnected) {
+                val normalisedPhaseTime = (((600.coerceAtMost((10.coerceAtLeast(phaseTimeSeconds))))/10F).toInt())*10
+                // phase time converted to byte range 100 - 159
+                val phaseTimeByte = (((normalisedPhaseTime - 10)/10) + 100).toByte()
+
+                // startStage converted to byte range 10 - 17
+                val startStageByte = ((8.coerceAtMost(1.coerceAtLeast(startStage))) + 9).toByte()
+
+                // endStage converted to byte range 20 - 27
+                val endStageByte = ((8.coerceAtMost(1.coerceAtLeast(endStage))) + 19).toByte()
+
+                // paletteCode converted to byte range 30 - 39
+                val paletteCodeByte = ((10.coerceAtMost(1.coerceAtLeast(paletteCode))) + 29).toByte()
+
+                val brightnessByte = ((10.coerceAtMost(1.coerceAtLeast(brightness))) + 49).toByte()
+
+                activeCharacteristic.value = byteArrayOf(phaseTimeByte, paletteCodeByte, startStageByte, brightnessByte, START_COMMAND)
 
                 //The character size of TI CC2540 is limited to 17 bytes, otherwise characteristic can not be sent properly,
                 //so String should be cut to comply this restriction. And something should be done here:
