@@ -205,7 +205,7 @@ override fun onActivityResult(
             Comparator { obj: BluetoothDevice, a: BluetoothDevice ->
                 obj.compareTo(a) }
         )
-        listAdapter!!.notifyDataSetChanged()
+        listAdapter.notifyDataSetChanged()
         scanLeDevice(true)
     }
 

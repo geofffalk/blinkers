@@ -14,19 +14,24 @@ CRGB green  = CHSV( HUE_GREEN, 255, 255);
 CRGB cyan  = CHSV( HUE_AQUA, 255, 255);
 CRGB blue  = CHSV( HUE_BLUE, 255, 255);
 CRGB purple = CHSV( HUE_PURPLE, 255, 255);
-CRGB colors[8] = {red, orange, yellow, green, cyan, blue, purple, purple};
-CRGB selectedColors[8] = {blue, blue, blue, blue, blue, blue, blue, blue};
+CRGB white  = CHSV( 255, 255, 255);
+CRGB selectedPalette[7];
 
-bool isSyncedWithPhase = false;
+bool isSynced = false;
 bool isSleepStarted = true;
 unsigned long sleepStartTime;
 unsigned long phaseStartTime;
+unsigned long colorStartTime;
 unsigned long currentTime;
-unsigned long cycleStartTime;
-unsigned long alternatingStartTime;
+
 int currentPhase = -1;
-int colorCode = 0;
+int currentColorIndex = 0;
+int endPhase = 0;
 long phaseDuration = 0;
+long colorDuration = 0;
+int colorCount = 0;
+int colorCode = 0;
+long sessionDuration = 0;
 long repeatTime = 0;
 const int alternatingTime = 1000;
 bool isLeftOn = true;
@@ -38,7 +43,6 @@ void setup() {
   Serial.begin(115200);
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   FastLED.setBrightness(50);
-  cycleStartTime = millis();
 }
 
 void turnOffAll() {
@@ -50,74 +54,103 @@ void turnOffAll() {
 
 void incrementPhase() {
   turnOffAll();
-  if (currentPhase < 8) {
+  if (currentPhase <= endPhase) {
     currentPhase++;
     phaseStartTime = millis();
-    isSyncedWithPhase = false;
+    isSynced = false;
   } else {
     isSleepStarted = true;
     sleepStartTime = millis();
   }
-  //    int brightness = 0;    // how bright the LED is
-  //int fadeAmount = 5;    // how many points to fade the LED by
 }
 
-void performSynced() {
-  if (!isSyncedWithPhase) {
+void incrementColor() {
+  if (currentColorIndex < colorCount - 1) {
+    currentColorIndex++;
+    colorStartTime = millis();
+    isSynced = false;
+  }
+}
+
+void perform() {
+  if (!isSynced) {
     int left = 8 - currentPhase;
     int right = 16 - currentPhase;
 
     for (int i = 0; i < NUM_LEDS; i++) {
       if (i == left || i == right) {
-        leds[i] = selectedColors[currentPhase - 1];
+        leds[i] = selectedPalette[currentColorIndex];
       } else leds[i] = CRGB::Black;
     }
-    
+
     FastLED.show();
     FastLED.delay(1000 / UPDATES_PER_SECOND);
 
-    isSyncedWithPhase = true;
-  } else if (phaseDuration <= (currentTime - phaseStartTime)) {
-    incrementPhase();
+    isSynced = true;
+  } else {
+    if (phaseDuration <= (currentTime - phaseStartTime)) {
+      incrementPhase();
+    }
+    if (colorDuration <= (currentTime - colorStartTime)) {
+      incrementColor();
+    }
   }
 }
-//
-//void performAlternating() {
-//  long currentTime = millis();
-//  if (!isSyncedWithPhase) {
-//    alternatingStartTime = millis();
-//    isSyncedWithPhase = true;
-//  }
-//
-//  if (prepDuration <= (currentTime - phaseStartTime)) {
-//    incrementPhase();
-//  } else {
-//    if (currentTime - alternatingStartTime > alternatingTime) {
-//      isLeftOn = !isLeftOn;
-//      alternatingStartTime = millis();
-//    }
-//
-//    if (isLeftOn) {
-//      leds[7] = CRGB::Black;
-//      leds[15] = CRGB::Blue;
-//    } else {
-//      leds[15] = CRGB::Black;
-//      leds[7] = CRGB::Blue;
-//    }
-//
-//    FastLED.show();
-//  }
-//}
 
-void loop() {
+void setPalette() {
+        switch (colorCode) {
+        case 0:
+          selectedPalette[0] = red;
+          selectedPalette[1] = orange;
+          selectedPalette[2] = yellow;
+          colorCount = 3;
+          Serial.println("Fire palette selected");
+          break;
+        case 1:
+          selectedPalette[0] = green;
+          selectedPalette[1] = cyan;
+          selectedPalette[2] = purple;
+          selectedPalette[3] = blue;
+          colorCount = 4;
+          Serial.println("Water palette selected");
+          break;
+        case 2:
+          selectedPalette[2] = orange;
+          selectedPalette[1] = yellow;
+          selectedPalette[0] = green;
+          colorCount = 3;
+          Serial.println("Earth palette selected");
+          break;
+        case 3:
+          selectedPalette[0] = blue;
+          selectedPalette[1] = cyan;
+          colorCount = 2;
+          Serial.println("Air palette selected");
+          break;
+        case 4:
+        default:
+          selectedPalette[0] = red;
+          selectedPalette[1] = orange;
+          selectedPalette[2] = yellow;
+          selectedPalette[3] = green;
+          selectedPalette[4] = cyan;
+          selectedPalette[5] = blue;
+          selectedPalette[6] = purple;
+          colorCount = 7;
+          Serial.println("Rainbow palette selected");
+          break;
+      }
+}
+
+void checkSerial() {
   while (Serial.available()) {
     byte byteInput = Serial.read();
     int input = (int)byteInput;
-    if (input >= 100 && input < 160) {
+    if (input > 100 && input < 160) {
       // phase duration instruction between 100 and 159
-      phaseDuration = (long)(input - 99) * 10000;
-      Serial.println("Phase duration set");
-      Serial.println(phaseDuration);
+      sessionDuration = (long)(input - 100) * 60 * 1000;
+      Serial.println("Session duration set");
+      Serial.println(sessionDuration);
     } else if (input >= 50 && input < 60) {
       // brightness between 50 -59
       brightness = (input - 49) * 10;
@@ -125,28 +158,31 @@ void loop() {
       Serial.println(brightness);
       FastLED.setBrightness(brightness);
 
-    } else if (input >= 30 && input < 40) {
+    } else if (input >= 30 && input < 35) {
       // color code
       colorCode = input - 30;
-      for (int i = 0; i < 8; i++) {
-        if (colorCode < 9) {
-          selectedColors[i] = colors[colorCode];
-        } else {
-          selectedColors[i] = colors[i];
-        }
-      }
-      Serial.println("color code set");
-      Serial.println(colorCode);
+      setPalette();
     } else if (input >= 10 && input < 18) {
       currentPhase = input - 10;
       Serial.println("startPhase set");
       Serial.println(currentPhase);
-
+    } else if (input >= 20 && input < 28) {
+      endPhase = input - 20;
+      Serial.println("endPhase set");
+      Serial.println(endPhase);
     } else if (input == 200) {
       //start
-      isSyncedWithPhase = false;
+      phaseDuration = sessionDuration / (endPhase - currentPhase + 1);
+      Serial.println("phaseDuration set");
+      Serial.println(phaseDuration);
+
+      colorDuration = sessionDuration / colorCount;
+      Serial.println("colorDuration set");
+      Serial.println(colorDuration);
+      currentColorIndex = 0;
+      colorStartTime = millis();
+      isSynced = false;
       isSleepStarted = false;
-      // currentPhase = 0;
       incrementPhase();
       Serial.println("STARTED");
     } else if (input == 201) {
@@ -156,13 +192,14 @@ void loop() {
     }
   }
 
+
+}
+
+void loop() {
+  checkSerial();
   currentTime = millis();
-  // if (currentPhase == 0) {
-  //    performAlternating();
-  //  } else
-  //
   if (currentPhase <= 8 && currentPhase >= 0) {
-    performSynced();
+    perform();
   } else {
     turnOffAll();
   }

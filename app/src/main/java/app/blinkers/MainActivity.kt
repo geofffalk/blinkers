@@ -50,8 +50,8 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == Activity.RESULT_OK) {
-                findBluetoothDevices();
-            } else quitApp();
+                findBluetoothDevices()
+            } else quitApp()
         }
     }
 

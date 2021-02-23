@@ -6,7 +6,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.format.DateFormat.format
 import android.view.*
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -15,6 +14,8 @@ import app.blinkers.data.Analysis
 import app.blinkers.data.source.DefaultDeviceCommunicator
 import app.blinkers.databinding.ControllerFragBinding
 import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
+import it.sephiroth.android.library.rangeseekbar.RangeSeekBar
+import it.sephiroth.android.library.rangeseekbar.RangeSeekBar.OnRangeSeekBarChangeListener
 import kotlinx.android.synthetic.main.controller_frag.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,11 +26,11 @@ import org.apache.commons.math3.linear.RealMatrix
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
 import java.io.File
 import kotlin.coroutines.CoroutineContext
-import kotlin.math.floor
+
 
 class ControllerFragment : Fragment(), CoroutineScope {
 
-    private var btSocket: BluetoothSocket? = null;
+    private var btSocket: BluetoothSocket? = null
     private val viewModel by viewModels<ControllerViewModel> { getViewModelFactory() }
 
     private val args: ControllerFragmentArgs by navArgs()
@@ -66,32 +67,37 @@ class ControllerFragment : Fragment(), CoroutineScope {
 
         viewDataBinding.root.keepScreenOn = true
 
-        with(viewDataBinding.root.startStage) {
-            maxValue = 8
-            minValue = 1
-            displayedValues = (1..8).toMutableList().map { num -> "$num"}.toTypedArray()
-        }
-
-        with(viewDataBinding.root.phaseSeconds) {
+        with(viewDataBinding.root.sessionMinutes) {
              maxValue = 59
              minValue = 1
-           displayedValues = (10..600 step 10).toList().map { num -> if (num < 60) "$num secs" else "${floor(num.toDouble() / 60F).toInt()} m ${num % 60}" }.toTypedArray()
+           displayedValues = (1..59).toList().map { num -> if (num == 1) "$num min" else "$num mins" }.toTypedArray()
 
          }
 
         with(viewDataBinding.root.colorScheme) {
-            maxValue = 10
-            minValue = 1
-            displayedValues = (1..10).toList().map { num -> "$num" }.toTypedArray()
+            maxValue = 4
+            minValue = 0
+            displayedValues = listOf("Fire", "Water", "Earth", "Air", "Rainbow").toTypedArray()
         }
 
-        with(viewDataBinding.root.brightness) {
-            maxValue = 10
-            minValue = 1
-            displayedValues = (1..10).toList().map { num -> "$num" }.toTypedArray()
-        }
+        viewDataBinding.root.startEndPhase.setOnRangeSeekBarChangeListener(object :
+            OnRangeSeekBarChangeListener {
+            override fun onProgressChanged(
+                seekBar: RangeSeekBar, progressStart: Int, progressEnd: Int, fromUser: Boolean
+            ) {
+                viewModel.startStage.value = progressStart
+                viewModel.endStage.value = progressEnd
+            }
+
+            override fun onStartTrackingTouch(seekBar: RangeSeekBar) {}
+            override fun onStopTrackingTouch(seekBar: RangeSeekBar) {}
+        })
 
         return viewDataBinding.root
+    }
+
+    interface OnValueChangeListener {
+        fun onValueChanged(value: Float)
     }
 
 
@@ -260,11 +266,6 @@ class ControllerFragment : Fragment(), CoroutineScope {
             initialStart = false
              connect()
         }
-    }
-
-    override fun onDestroy() {
-      //  if (connected != Connected.False) disconnect()
-        super.onDestroy()
     }
 
     /*

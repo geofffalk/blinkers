@@ -3,7 +3,7 @@ package app.blinkers.data.source;
 @SuppressWarnings("unchecked")
 public class RingBuffer<T> {
 
-    private T[] buffer;          // queue elements
+    private final T[] buffer;          // queue elements
     private int count = 0;          // number of elements on queue
     private int indexOut = 0;       // index of first element of queue
     private int indexIn = 0;       // index of next available slot

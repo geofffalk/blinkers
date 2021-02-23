@@ -1,5 +1,6 @@
 package app.blinkers.data.source
 
+import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
 import android.content.BroadcastReceiver
@@ -33,7 +34,7 @@ interface DeviceCommunicator {
     fun setPhaseTime(phase: Int, seconds: Int)
     fun setSpeed(speed: Int)
     fun setBrightness(brightness: Int)
-    fun startProgram(phaseTimeSeconds: Int, paletteCode: Int, startStage: Int, endStage: Int, brightness: Int)
+    fun startProgram(sessionTime: Int, paletteCode: Int, startStage: Int, endStage: Int, brightness: Int)
     fun stopProgram()
 }
 
@@ -42,6 +43,7 @@ data class GattCharacteristics(val modelNumber: BluetoothGattCharacteristic,
                                val command: BluetoothGattCharacteristic
 )
 
+@SuppressLint("StaticFieldLeak")
 object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
 
     private val MAX_CHARACTERISTIC_LENGTH = 12
@@ -70,7 +72,7 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
     private val buffer: ByteArray = ByteArray(1024)
     private val disconnectBroadcastReceiver: BroadcastReceiver
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-    private var isWriting = false;
+    private var isWriting = false
     private const val WRITE_NEW_CHARACTERISTIC = -1
 
     data class UglyMutableCharacteristicHolder(var characteristic: BluetoothGattCharacteristic, var characteristicValue: String)
@@ -262,7 +264,7 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
                 btGatt?.writeCharacteristic(activeCharacteristic)
             }
         } catch (exception: IOException) {
-            Timber.d("Comms failure");
+            Timber.d("Comms failure")
         }
     }
 
@@ -298,12 +300,12 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
 
             //     socket.outputStream.write("${p0Millis},${p1Millis},${p2Millis},${p3Millis},${rMillis}*".toByteArray())
         } catch (exception: IOException) {
-            Timber.d("Comms failure");
+            Timber.d("Comms failure")
         }
     }
 
     override fun startProgram(
-        phaseTimeSeconds: Int,
+        sessionTime: Int,
         paletteCode: Int,
         startStage: Int,
         endStage: Int,
@@ -311,22 +313,22 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
     ) {
         try {
             if (isConnected) {
-                val normalisedPhaseTime = (((600.coerceAtMost((10.coerceAtLeast(phaseTimeSeconds))))/10F).toInt())*10
+
                 // phase time converted to byte range 100 - 159
-                val phaseTimeByte = (((normalisedPhaseTime - 10)/10) + 100).toByte()
+                val sessionTimeByte = (sessionTime + 100).toByte()
 
                 // startStage converted to byte range 10 - 17
-                val startStageByte = ((8.coerceAtMost(1.coerceAtLeast(startStage))) + 9).toByte()
+                val startStageByte = ((7.coerceAtMost(0.coerceAtLeast(startStage))) + 10).toByte()
 
                 // endStage converted to byte range 20 - 27
-                val endStageByte = ((8.coerceAtMost(1.coerceAtLeast(endStage))) + 19).toByte()
+                val endStageByte = ((7.coerceAtMost(0.coerceAtLeast(endStage))) + 20).toByte()
 
-                // paletteCode converted to byte range 30 - 39
-                val paletteCodeByte = ((10.coerceAtMost(1.coerceAtLeast(paletteCode))) + 29).toByte()
+                // paletteCode converted to byte range 30 - 37
+                val paletteCodeByte = ((4.coerceAtMost(0.coerceAtLeast(paletteCode))) + 30).toByte()
 
-                val brightnessByte = ((10.coerceAtMost(1.coerceAtLeast(brightness))) + 49).toByte()
+                val brightnessByte = ((9.coerceAtMost(0.coerceAtLeast(brightness))) + 50).toByte()
 
-                activeCharacteristic.value = byteArrayOf(phaseTimeByte, paletteCodeByte, startStageByte, brightnessByte, START_COMMAND)
+                activeCharacteristic.value = byteArrayOf(sessionTimeByte, paletteCodeByte, startStageByte, endStageByte, brightnessByte, START_COMMAND)
 
                 //The character size of TI CC2540 is limited to 17 bytes, otherwise characteristic can not be sent properly,
                 //so String should be cut to comply this restriction. And something should be done here:
@@ -355,7 +357,7 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
 
        //     socket.outputStream.write("${p0Millis},${p1Millis},${p2Millis},${p3Millis},${rMillis}*".toByteArray())
         } catch (exception: IOException) {
-            Timber.d("Comms failure");
+            Timber.d("Comms failure")
         }
     }
 
@@ -407,7 +409,7 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
                     activeCharacteristic= gattCharacteristics.serialPort
                     gattCharacteristics.serialPort.writeType = WRITE_TYPE_DEFAULT
                     btGatt?.setCharacteristicNotification(activeCharacteristic, true)
-                    isConnected = true;
+                    isConnected = true
                 } else if (activeCharacteristic == gattCharacteristics.serialPort) {
                     Timber.d("Serial received data: ${characteristic.getStringValue(0)}")
                 }
@@ -549,12 +551,12 @@ object DefaultDeviceCommunicator  : DeviceCommunicator, Runnable {
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic
         ) {
-            Timber.d("Characteristic changed: $characteristic");
+            Timber.d("Characteristic changed: $characteristic")
         }
     }
 
     private fun getGattServices(services: List<BluetoothGattService>?) {
-        if (services == null) return;
+        if (services == null) return
 
         var modelNumberChar: BluetoothGattCharacteristic? = null
         var serialPortChar: BluetoothGattCharacteristic? = null

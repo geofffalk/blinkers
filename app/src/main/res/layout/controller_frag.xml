@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
-
         <import type="android.view.View" />
         <import type="android.widget.CompoundButton" />
 
@@ -37,6 +36,58 @@
                 android:orientation="horizontal"
                 android:layout_gravity="center">
 
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:textColor="@color/colorPrimary"
+                android:padding="5dp"
+                android:gravity="center"
+                android:textSize="14dp"
+                android:text="Session time"/>
+
+
+            <NumberPicker
+                android:id="@+id/sessionMinutes"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:value="@={viewmodel.sessionTime}"/>
+
+
+
+        </LinearLayout>
+
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/colorPrimary"
+                            android:padding="5dp"
+                            android:gravity="center"
+                            android:textSize="14dp"
+                            android:text="Start position                                 End position"/>
+
+            <it.sephiroth.android.library.rangeseekbar.RangeSeekBar
+                android:id="@+id/startEndPhase"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="30dp"
+                style="@style/Base.Sephiroth.Widget.RangeSeekBar.Discrete"
+                android:max="7"
+                app:range_progress_endValue="7"
+                app:range_progress_startEnd_minDiff="0"
+                app:range_progress_startValue="0" />
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_gravity="center">
+
+
+
                 <TextView
                     android:layout_width="0dp"
                     android:layout_weight="1"
@@ -45,30 +96,7 @@
                     android:padding="5dp"
                     android:gravity="center"
                     android:textSize="14dp"
-                    android:text="Starting LED"/>
-
-
-                <NumberPicker
-                    android:id="@+id/startStage"
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:value="@={viewmodel.startStage}"/>
-
-                <Space
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="match_parent"
-                    android:textColor="@color/colorPrimary"
-                    android:padding="5dp"
-                    android:gravity="center"
-                    android:textSize="14dp"
-                    android:text="Colour scheme"/>
+                    android:text="Colour palette"/>
 
 
                 <NumberPicker
@@ -78,81 +106,54 @@
                     android:layout_height="wrap_content"
                     android:value="@={viewmodel.colorScheme}"/>
 
-                <Space
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp" />
 
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_gravity="center">
-
             <TextView
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="match_parent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:textColor="@color/colorPrimary"
                 android:padding="5dp"
                 android:gravity="center"
                 android:textSize="14dp"
-                android:text="Phase time in seconds"/>
+                android:text="Brightness"/>
 
 
-            <NumberPicker
-                android:id="@+id/phaseSeconds"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:value="@={viewmodel.phaseTime}"/>
+            <androidx.appcompat.widget.AppCompatSeekBar
+                android:id="@+id/brightness"
+                app:tickMark="@drawable/tickmark"
+                android:padding="30dp"
 
-                <Space
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="match_parent"
-                    android:textColor="@color/colorPrimary"
-                    android:padding="5dp"
-                    android:gravity="center"
-                    android:textSize="14dp"
-                    android:text="Brightness"/>
-
-
-                <NumberPicker
-                    android:id="@+id/brightness"
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:value="@={viewmodel.brightness}"/>
-
-                <Space
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp" />
-
-        </LinearLayout>
-
-            <LinearLayout
+                android:min="0"
+                android:progress="@{viewmodel.brightness}"
+                android:max="9"
+                android:tickMark="@drawable/tickmark"
+                android:onProgressChanged="@{viewmodel.onBrightnessChanged}"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_gravity="center">
-
-            </LinearLayout>
+                />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:layout_marginTop="10dp">
+                android:layout_marginTop="30dp">
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#ff0000"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:textColor="#ffffff"
+                    android:layout_marginEnd="10dp"
+                    android:text="STOP"
+                    android:onClick="@{() -> viewmodel.stopProgram()}"/>
+                
+                <Space
+                    android:layout_width="50dp"
+                    android:layout_height="0dp" />
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:layout_width="wrap_content"
@@ -174,16 +175,6 @@
                 android:gravity="center"
                 android:layout_marginTop="10dp">
 
-                <androidx.appcompat.widget.AppCompatButton
-                    android:layout_width="100dp"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="#ff0000"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
-                    android:textColor="#ffffff"
-                    android:layout_marginEnd="10dp"
-                    android:text="STOP"
-                    android:onClick="@{() -> viewmodel.stopProgram()}"/>
 
             </LinearLayout>
 

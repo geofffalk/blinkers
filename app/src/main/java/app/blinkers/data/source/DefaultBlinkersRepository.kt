@@ -127,7 +127,7 @@ class DefaultBlinkersRepository(
     override suspend fun setPhaseTime(phase: Int, seconds: Int) {
         if (phase in 0..3) {
         }
-        deviceCommunicator.setPhaseTime(phase, seconds);
+        deviceCommunicator.setPhaseTime(phase, seconds)
     }
 
     override suspend fun setSpeed(speed: Int) {
@@ -136,25 +136,28 @@ class DefaultBlinkersRepository(
         deviceCommunicator.setSpeed(speed)
     }
 
-    override fun startProgram(startStage: Int, endStage: Int, phaseTime: Int, colorCode: Int, brightness: Int) {
+    override fun startProgram(startStage: Int, endStage: Int, sessionTime: Int, colorCode: Int, brightness: Int) {
         when {
-            phaseTime !in 10..600 -> {
-                Timber.d("Phase time must be between 10 and 600")
+            sessionTime !in 1..59 -> {
+                Timber.d("Phase time must be between 1 and 59")
             }
-            startStage !in 1..8 -> {
-                Timber.d("Start stage must be between 1 and 8")
+            startStage !in 0..7 -> {
+                Timber.d("Start stage must be between 0 and 7")
+            }
+            endStage !in 0..7 -> {
+                Timber.d("End stage must be between 0 and 7")
             }
             startStage > endStage -> {
                 Timber.d("Start stage cannot begin after end stage - program not started")
             }
-            colorCode !in 1..10 -> {
-                Timber.d("Palette code must be between 1 and 10")
+            colorCode !in 0..4 -> {
+                Timber.d("Palette code must be between 0 and 4")
             }
-            brightness !in 1..10 -> {
-                Timber.d("Invalid brightness level - must be between 1 and 10")
+            brightness !in 0..9 -> {
+                Timber.d("Invalid brightness level - must be between 1 and 9")
             }
             else -> {
-                deviceCommunicator.startProgram(phaseTime, colorCode, startStage, endStage, brightness)
+                deviceCommunicator.startProgram(sessionTime, colorCode, startStage, endStage, brightness)
             }
         }
     }

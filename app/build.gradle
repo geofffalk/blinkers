@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId "app.blinkers"
-        minSdkVersion 23
+        minSdkVersion 26
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -91,4 +91,6 @@ dependencies {
 
     implementation "com.github.doyaaaaaken:kotlin-csv-jvm:0.10.4"
     implementation "org.apache.commons:commons-math3:3.6.1"
+
+    implementation 'it.sephiroth.android.library.rangeseekbar:rangeseekbar:1.1.0'
 }
